@@ -1,7 +1,5 @@
 
-
 import random
-import uuid
 import numpy as np
 import pandas as pd
 from faker import Faker
@@ -27,30 +25,24 @@ REQUIRED_COLUMNS = [
 
 # ── Baseline parameters for legitimate transactions ───────────────────────────
 
-LEGIT_MERCHANTS = [
-    "Amazon", "Flipkart", "Swiggy", "Zomato", "BigBasket",
-    "Myntra", "MakeMyTrip", "BookMyShow", "Nykaa", "Croma",
-    "PhonePe", "Paytm Mall", "Tata CLiQ", "Ajio", "Meesho",
-]
 LEGIT_CATEGORIES = [
     "ecommerce", "food_delivery", "groceries", "fashion",
     "travel", "entertainment", "electronics", "beauty",
 ]
-LEGIT_COUNTRIES = ["IN", "US", "GB", "AE", "SG", "DE", "AU", "CA"]
-LEGIT_DEVICES   = ["mobile", "desktop", "tablet"]
+LEGIT_DEVICES = ["mobile", "desktop", "tablet"]
 
 
 # ── Card ID / BIN helpers ─────────────────────────────────────────────────────
 
 def _make_card_id(bin_prefix: str) -> str:
     """Generate a card ID with a proper 6-digit BIN prefix + 10 random digits."""
-    suffix = "".join([str(random.randint(0, 9)) for _ in range(10)])
+    suffix = fake.numerify(text="##########")  # Faker: 10 random digits
     return f"{bin_prefix}{suffix}"
 
 
 def _random_bin() -> str:
     """Generate a random 6-digit BIN for legitimate cards."""
-    return "".join([str(random.randint(0, 9)) for _ in range(6)])
+    return fake.numerify(text="######")  # Faker: 6 random digits
 
 
 # ── Amount samplers ───────────────────────────────────────────────────────────
@@ -62,7 +54,6 @@ def _sample_amounts(n: int, amt_min: float, amt_max: float, distribution: str) -
         std  = (amt_max - amt_min) / 4
         amounts = np.random.normal(mean, std, n)
     elif distribution == "skewed_low":
-        # Beta distribution skewed toward lower end
         amounts = np.random.beta(2, 5, n) * (amt_max - amt_min) + amt_min
     elif distribution == "skewed_high":
         amounts = np.random.beta(5, 2, n) * (amt_max - amt_min) + amt_min
@@ -76,16 +67,17 @@ def _sample_amounts(n: int, amt_min: float, amt_max: float, distribution: str) -
 
 def _generate_fraud_rows(blueprint: dict, count: int, start_date: datetime) -> list[dict]:
     """
-    Generates `count` fraud transaction rows by reading the LLM blueprint
-    and sampling from the specified distributions using NumPy.
+    Generates fraud rows from the LLM blueprint using NumPy for distributions.
+    Faker used only for transaction_id (uuid) and card number generation.
+    All statistical patterns come from the blueprint.
     """
     bp = blueprint
     rows = []
 
     # ── Derive card pool ──────────────────────────────────────────────────
-    num_cards   = min(bp["num_unique_cards"], count)  # can't have more cards than rows
-    bin_prefix  = bp["bin_prefix"]
-    shared_bin  = bp.get("shared_bin", True)
+    num_cards  = min(bp["num_unique_cards"], count)
+    bin_prefix = bp["bin_prefix"]
+    shared_bin = bp.get("shared_bin", True)
 
     card_pool = []
     for _ in range(num_cards):
@@ -94,34 +86,30 @@ def _generate_fraud_rows(blueprint: dict, count: int, start_date: datetime) -> l
         else:
             card_pool.append(_make_card_id(_random_bin()))
 
-    # ── Sample amounts ────────────────────────────────────────────────────
+    # ── Sample amounts (NumPy) ────────────────────────────────────────────
     amounts = _sample_amounts(
         count, bp["amount_min"], bp["amount_max"], bp["amount_distribution"]
     )
 
-    # ── Generate timestamps ───────────────────────────────────────────────
+    # ── Generate timestamps (NumPy) ───────────────────────────────────────
     window_hours = bp["time_window_hours"]
     clustering   = bp.get("time_clustering", "burst")
 
     if clustering == "burst":
-        # All fraud timestamps packed into the window
         burst_start = start_date + timedelta(days=random.randint(0, 5))
         offsets = np.random.uniform(0, window_hours * 3600, count)
     else:
-        # Spread across the full 30-day period
         burst_start = start_date
         offsets = np.random.uniform(0, 30 * 24 * 3600, count)
 
-    offsets.sort()  # chronological within the fraud cluster
+    offsets.sort()
 
     # ── Assign cards to transactions ──────────────────────────────────────
-    # Distribute ~velocity_per_card transactions to each card
     velocity = bp["velocity_per_card"]
     card_assignments = []
     for card_id in card_pool:
         card_assignments.extend([card_id] * velocity)
 
-    # Pad or trim to exactly `count`
     while len(card_assignments) < count:
         card_assignments.append(random.choice(card_pool))
     random.shuffle(card_assignments)
@@ -138,16 +126,16 @@ def _generate_fraud_rows(blueprint: dict, count: int, start_date: datetime) -> l
         ts = burst_start + timedelta(seconds=float(offsets[i]))
 
         rows.append({
-            "transaction_id":  str(uuid.uuid4()),
-            "card_id":         card_id,
-            "bin":             card_id[:6],
-            "amount":          float(amounts[i]),
-            "merchant":        random.choice(merchants),
+            "transaction_id":    fake.uuid4(),           # Faker
+            "card_id":           card_id,
+            "bin":               card_id[:6],
+            "amount":            float(amounts[i]),       # NumPy
+            "merchant":          random.choice(merchants),
             "merchant_category": random.choice(categories),
-            "country":         random.choice(countries),
-            "device":          random.choice(devices),
-            "timestamp":       ts.isoformat(),
-            "is_fraud":        True,
+            "country":           random.choice(countries),
+            "device":            random.choice(devices),
+            "timestamp":         ts.isoformat(),
+            "is_fraud":          True,
         })
 
     return rows
@@ -157,34 +145,40 @@ def _generate_fraud_rows(blueprint: dict, count: int, start_date: datetime) -> l
 
 def _generate_legit_rows(count: int, start_date: datetime) -> list[dict]:
     """
-    Generates `count` realistic non-fraud transactions using Faker + NumPy.
-    Amounts normally distributed around $80–$200, spread across 30 days.
+    Generates realistic non-fraud transactions.
+
+    Faker handles:  transaction IDs, card numbers, merchant names,
+                    countries, timestamps
+    NumPy handles:  amount distribution (normal around $120)
     """
+    # NumPy — amounts normally distributed around typical spend
     amounts = np.clip(np.random.normal(loc=120, scale=45, size=count), 5.0, 800.0)
     amounts = np.round(amounts, 2)
 
+    end_date = start_date + timedelta(days=30)
+
     rows = []
     for i in range(count):
-        bin_prefix = _random_bin()
-        card_id    = _make_card_id(bin_prefix)
-        ts = start_date + timedelta(
-            days=random.randint(0, 29),
-            hours=random.randint(6, 23),   # realistic hours
-            minutes=random.randint(0, 59),
-            seconds=random.randint(0, 59),
+        bin_prefix = _random_bin()                      # Faker: 6 random digits
+        card_id    = _make_card_id(bin_prefix)          # Faker: BIN + 10 digits
+
+        # Faker: realistic timestamp spread across 30 days
+        ts = fake.date_time_between(
+            start_date=start_date,
+            end_date=end_date,
         )
 
         rows.append({
-            "transaction_id":  str(uuid.uuid4()),
-            "card_id":         card_id,
-            "bin":             bin_prefix,
-            "amount":          float(amounts[i]),
-            "merchant":        random.choice(LEGIT_MERCHANTS),
+            "transaction_id":    fake.uuid4(),              # Faker: unique UUID
+            "card_id":           card_id,                   # Faker: card number
+            "bin":               bin_prefix,                # Faker: 6-digit BIN
+            "amount":            float(amounts[i]),          # NumPy: normal distribution
+            "merchant":          fake.company(),             # Faker: realistic company names
             "merchant_category": random.choice(LEGIT_CATEGORIES),
-            "country":         random.choice(LEGIT_COUNTRIES),
-            "device":          random.choice(LEGIT_DEVICES),
-            "timestamp":       ts.isoformat(),
-            "is_fraud":        False,
+            "country":           fake.country_code(),        # Faker: diverse countries
+            "device":            random.choice(LEGIT_DEVICES),
+            "timestamp":         ts.isoformat(),             # Faker: spread timestamps
+            "is_fraud":          False,
         })
 
     return rows
