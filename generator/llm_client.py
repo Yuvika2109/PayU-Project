@@ -1,7 +1,8 @@
+
+
 import json
 import re
 import requests
-from typing import Any
 
 
 # ── Ollama config ─────────────────────────────────────────────────────────────
@@ -9,46 +10,70 @@ from typing import Any
 OLLAMA_URL   = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "llama3"
 
-MAX_RETRIES  = 3    # retries per batch if JSON extraction fails
-TIMEOUT_SECS = 300  # 5 min — raised because Llama 3 is slow on CPU
-BATCH_SIZE   = 5    # rows requested per LLM call — keep this small (5–10)
+MAX_RETRIES  = 3
+TIMEOUT_SECS = 120  # blueprint is small — 2 min is generous
+
+
+# ── Default blueprint (fallback if LLM fails completely) ─────────────────────
+
+DEFAULT_BLUEPRINT = {
+    "amount_min":          0.50,
+    "amount_max":          10.00,
+    "amount_distribution": "uniform",
+    "velocity_per_card":   50,
+    "time_window_hours":   2,
+    "num_unique_cards":    15,
+    "shared_bin":          True,
+    "bin_prefix":          "453201",
+    "merchants":           ["Amazon", "Steam", "Spotify"],
+    "merchant_categories": ["streaming", "gaming"],
+    "countries":           ["US", "IN"],
+    "devices":             ["mobile", "desktop"],
+    "time_clustering":     "burst",
+}
+
+# Every field that must exist and its expected type
+_REQUIRED_FIELDS = {
+    "amount_min":          (int, float),
+    "amount_max":          (int, float),
+    "amount_distribution": str,
+    "velocity_per_card":   (int, float),
+    "time_window_hours":   (int, float),
+    "num_unique_cards":    (int, float),
+    "shared_bin":          bool,
+    "bin_prefix":          str,
+    "merchants":           list,
+    "countries":           list,
+    "devices":             list,
+    "time_clustering":     str,
+}
 
 
 # ── Raw API call (streaming) ──────────────────────────────────────────────────
 
 def _call_ollama(prompt: str) -> str:
-    """
-    Sends a prompt to Ollama using streaming mode so the connection stays
-    alive while tokens are generated — this prevents read timeouts on slow
-    machines. Assembles all streamed chunks into a single string.
-    """
+    """Sends prompt to Ollama with streaming to prevent timeouts."""
     payload = {
         "model":  OLLAMA_MODEL,
         "prompt": prompt,
-        "stream": True,   # streaming keeps the socket alive token-by-token
+        "stream": True,
     }
 
     try:
         response = requests.post(
-            OLLAMA_URL,
-            json=payload,
-            timeout=TIMEOUT_SECS,
-            stream=True,
+            OLLAMA_URL, json=payload, timeout=TIMEOUT_SECS, stream=True,
         )
         response.raise_for_status()
     except requests.exceptions.ConnectionError:
         raise RuntimeError(
-            "Cannot reach Ollama. Make sure it is running — open a terminal and run: ollama serve"
+            "Cannot reach Ollama. Make sure it is running — "
+            "open a terminal and run: ollama serve"
         )
     except requests.exceptions.Timeout:
-        raise RuntimeError(
-            f"Ollama timed out after {TIMEOUT_SECS}s even with streaming. "
-            "Try lowering BATCH_SIZE in llm_client.py, or run: ollama pull llama3:8b"
-        )
+        raise RuntimeError(f"Ollama timed out after {TIMEOUT_SECS}s.")
     except requests.exceptions.HTTPError as e:
-        raise RuntimeError(f"Ollama returned an HTTP error: {e}")
+        raise RuntimeError(f"Ollama HTTP error: {e}")
 
-    # Each streamed line is a JSON object: {"response": "token", "done": false}
     full_text = ""
     for raw_line in response.iter_lines():
         if raw_line:
@@ -58,109 +83,144 @@ def _call_ollama(prompt: str) -> str:
                 if chunk.get("done", False):
                     break
             except json.JSONDecodeError:
-                continue  # skip any malformed lines
+                continue
 
     return full_text
 
 
 # ── JSON extractor ────────────────────────────────────────────────────────────
 
-def _extract_json_from_response(raw_text: str) -> list[dict]:
-    """
-    Extracts a JSON array from the LLM's raw text.
-    Handles markdown code fences, leading prose, and wrapped objects.
-    """
-    # Strategy 1: markdown code block ```json [...] ```
-    code_block_match = re.search(r"```(?:json)?\s*(\[.*?\])\s*```", raw_text, re.DOTALL)
-    if code_block_match:
+def _extract_json_object(raw_text: str) -> dict:
+    """Extracts a JSON object (not array) from the LLM response."""
+
+    # Strategy 1: code block ```json { ... } ```
+    code_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw_text, re.DOTALL)
+    if code_match:
         try:
-            return json.loads(code_block_match.group(1))
+            return json.loads(code_match.group(1))
         except json.JSONDecodeError:
             pass
 
-    # Strategy 2: first [ ... ] span anywhere in the text
-    array_match = re.search(r"(\[.*\])", raw_text, re.DOTALL)
-    if array_match:
+    # Strategy 2: first { ... } in the text
+    obj_match = re.search(r"(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})", raw_text, re.DOTALL)
+    if obj_match:
         try:
-            return json.loads(array_match.group(1))
+            return json.loads(obj_match.group(1))
         except json.JSONDecodeError:
             pass
 
     # Strategy 3: entire response is valid JSON
     try:
         parsed = json.loads(raw_text.strip())
-        if isinstance(parsed, list):
-            return parsed
         if isinstance(parsed, dict):
-            for value in parsed.values():
-                if isinstance(value, list):
-                    return value
+            return parsed
     except json.JSONDecodeError:
         pass
 
     raise ValueError(
-        "Could not extract a valid JSON array from the LLM response.\n"
-        f"Raw response (first 500 chars):\n{raw_text[:500]}"
+        "Could not extract a valid JSON object from LLM response.\n"
+        f"Raw (first 500 chars): {raw_text[:500]}"
     )
+
+
+# ── Blueprint validator ───────────────────────────────────────────────────────
+
+def _validate_blueprint(bp: dict) -> dict:
+    """
+    Validates the LLM blueprint and fills in defaults for any missing or
+    wrongly-typed fields. Never crashes — always returns a usable blueprint.
+    """
+    clean = {}
+
+    for field, expected_type in _REQUIRED_FIELDS.items():
+        value = bp.get(field)
+
+        # Field present and correct type → keep it
+        if value is not None and isinstance(value, expected_type):
+            clean[field] = value
+        # Field present but wrong type → try to coerce
+        elif value is not None:
+            try:
+                if expected_type in ((int, float), float):
+                    clean[field] = float(value)
+                elif expected_type == str:
+                    clean[field] = str(value)
+                elif expected_type == bool:
+                    clean[field] = bool(value)
+                elif expected_type == list and isinstance(value, str):
+                    clean[field] = [value]
+                else:
+                    clean[field] = DEFAULT_BLUEPRINT[field]
+            except (ValueError, TypeError):
+                clean[field] = DEFAULT_BLUEPRINT[field]
+                print(f"[llm_client] Field '{field}' had bad value, using default.")
+        # Field missing → use default
+        else:
+            clean[field] = DEFAULT_BLUEPRINT[field]
+            print(f"[llm_client] Field '{field}' missing from LLM output, using default.")
+
+    # Ensure numeric sanity
+    clean["amount_min"]       = max(0.01, float(clean["amount_min"]))
+    clean["amount_max"]       = max(clean["amount_min"] + 0.01, float(clean["amount_max"]))
+    clean["velocity_per_card"] = max(1, int(clean["velocity_per_card"]))
+    clean["time_window_hours"] = max(1, int(clean["time_window_hours"]))
+    clean["num_unique_cards"]  = max(1, int(clean["num_unique_cards"]))
+
+    # Ensure bin_prefix is 6 digits
+    bp_bin = str(clean["bin_prefix"]).replace(" ", "").replace("-", "")
+    if not bp_bin.isdigit() or len(bp_bin) < 6:
+        bp_bin = "453201"
+    clean["bin_prefix"] = bp_bin[:6]
+
+    # Ensure lists are non-empty
+    if not clean["merchants"]:
+        clean["merchants"] = DEFAULT_BLUEPRINT["merchants"]
+    if not clean["countries"]:
+        clean["countries"] = DEFAULT_BLUEPRINT["countries"]
+    if not clean["devices"]:
+        clean["devices"] = DEFAULT_BLUEPRINT["devices"]
+
+    return clean
 
 
 # ── Public interface ──────────────────────────────────────────────────────────
 
-def generate_fraud_transactions(prompt: str, total_needed: int = None) -> list[dict[str, Any]]:
+def get_fraud_blueprint(prompt: str) -> dict:
     """
-    Calls Ollama in small batches (BATCH_SIZE rows each) and accumulates
-    results until enough rows are collected.
+    Calls Ollama once and returns a validated fraud blueprint dict.
 
-    Why batching?
-      Asking for 20+ rows in one shot makes the LLM take 2-3 minutes and
-      often times out. Asking for 5 rows at a time is fast (~15-20s each)
-      and much more reliable.
+    Falls back to DEFAULT_BLUEPRINT if all retries fail — the system
+    never crashes, it just uses sensible defaults and logs a warning.
 
     Parameters
     ----------
-    prompt       : base prompt from prompt_builder — batch count is appended
-    total_needed : how many fraud rows to collect in total.
-                   If None, runs exactly one batch of BATCH_SIZE.
+    prompt : complete prompt from prompt_builder.build_prompt()
 
     Returns
     -------
-    list of dicts — one per transaction (unvalidated; data_builder validates)
+    dict — validated blueprint with all required fields
     """
-    if total_needed is None:
-        total_needed = BATCH_SIZE
+    last_error = None
 
-    all_rows   = []
-    batch_num  = 0
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            print(f"[llm_client] Calling Ollama (attempt {attempt}/{MAX_RETRIES})...")
+            raw_text  = _call_ollama(prompt)
+            raw_bp    = _extract_json_object(raw_text)
+            blueprint = _validate_blueprint(raw_bp)
+            print(f"[llm_client] Blueprint received and validated.")
+            return blueprint
 
-    while len(all_rows) < total_needed:
-        batch_num += 1
-        remaining  = total_needed - len(all_rows)
-        this_batch = min(BATCH_SIZE, remaining)
+        except (RuntimeError, ValueError) as e:
+            last_error = e
+            print(f"[llm_client] Attempt {attempt} failed: {e}")
 
-        # Append the batch count to the prompt so the LLM knows exactly how many to produce
-        batch_prompt = prompt + f"\n\nGenerate exactly {this_batch} transactions in this batch."
-
-        print(f"[llm_client] Batch {batch_num} — requesting {this_batch} rows "
-              f"({len(all_rows)}/{total_needed} collected so far)...")
-
-        last_error = None
-        for attempt in range(1, MAX_RETRIES + 1):
-            try:
-                raw_text = _call_ollama(batch_prompt)
-                rows     = _extract_json_from_response(raw_text)
-                all_rows.extend(rows)
-                print(f"[llm_client] Batch {batch_num} OK — got {len(rows)} rows.")
-                break  # move to next batch
-            except (RuntimeError, ValueError) as e:
-                print(f"[llm_client] Batch {batch_num}, attempt {attempt}/{MAX_RETRIES} failed: {e}")
-                last_error = e
-                if attempt == MAX_RETRIES:
-                    raise RuntimeError(
-                        f"Batch {batch_num} failed after {MAX_RETRIES} attempts. "
-                        f"Last error: {last_error}"
-                    )
-
-    print(f"[llm_client] Done — collected {len(all_rows)} fraud rows total.")
-    return all_rows[:total_needed]  # trim any extras from the last batch
+    # All retries failed — use default blueprint
+    print(
+        f"[llm_client] WARNING: All {MAX_RETRIES} attempts failed. "
+        f"Last error: {last_error}\n"
+        f"[llm_client] Using DEFAULT_BLUEPRINT as fallback."
+    )
+    return DEFAULT_BLUEPRINT.copy()
 
 
