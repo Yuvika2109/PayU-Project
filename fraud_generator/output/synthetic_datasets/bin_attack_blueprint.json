@@ -1,0 +1,247 @@
+{
+  "Fraud_Scenario_Name": "Bin Attack",
+  "Description": "Attacker tests BIN ranges with micro-transactions to find valid cards.",
+  "Fraud_Type": "Card-Not-Present Fraud",
+  "Dataset_Specifications": {
+    "total_rows": 5000,
+    "fraud_ratio": 0.33,
+    "output_format": "csv",
+    "date_range_start": "2022-01-01",
+    "date_range_end": "2023-12-31",
+    "num_users": 800,
+    "num_merchants": 120
+  },
+  "Normal_User_Profile": {
+    "transaction_amount": {
+      "distribution": "lognormal",
+      "min": 5.0,
+      "max": 3000.0,
+      "mean": 85.0,
+      "std": 120.0
+    },
+    "transactions_per_day": {
+      "mean": 1.8,
+      "std": 1.2,
+      "max": 12
+    },
+    "active_hours": {
+      "peak_start": 9,
+      "peak_end": 21,
+      "off_peak_weight": 0.05
+    },
+    "active_days": {
+      "weekday_weight": 0.75,
+      "weekend_weight": 0.25
+    },
+    "merchant_category_weights": {
+      "Grocery": 0.3,
+      "Retail": 0.25,
+      "Restaurant": 0.2,
+      "Gas": 0.1,
+      "Travel": 0.08,
+      "Entertainment": 0.07
+    },
+    "currency_weights": {
+      "USD": 0.85,
+      "EUR": 0.1,
+      "GBP": 0.05
+    },
+    "location_change_prob": 0.05,
+    "device_change_prob": 0.02
+  },
+  "Fraud_Patterns": [
+    {
+      "pattern_name": "Micro-transaction BIN Probe",
+      "description": "",
+      "weight": 0.6,
+      "sequence_type": "burst",
+      "params": {
+        "amount_min": 0.01,
+        "amount_max": 2.0,
+        "amount_mean": 0.5,
+        "amount_std": 0.4,
+        "burst_min_txns": 5,
+        "burst_max_txns": 80,
+        "burst_window_mins": 15,
+        "num_merchants": 1,
+        "preferred_hours": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "preferred_days": [
+          5,
+          6
+        ],
+        "same_device_prob": 0.95,
+        "same_location_prob": 0.99,
+        "foreign_ip_prob": 0.9,
+        "round_amount_prob": 0.05,
+        "velocity_txns_per_hour": 40.0
+      }
+    },
+    {
+      "pattern_name": "Graduated BIN Test",
+      "description": "",
+      "weight": 0.4,
+      "sequence_type": "chain",
+      "params": {
+        "amount_min": 1.0,
+        "amount_max": 50.0,
+        "amount_mean": 15.0,
+        "amount_std": 12.0,
+        "burst_min_txns": 3,
+        "burst_max_txns": 8,
+        "burst_window_mins": 30,
+        "num_merchants": 3,
+        "preferred_hours": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "preferred_days": [
+          5,
+          6
+        ],
+        "same_device_prob": 0.8,
+        "same_location_prob": 0.7,
+        "foreign_ip_prob": 0.75,
+        "round_amount_prob": 0.3,
+        "velocity_txns_per_hour": 10.0
+      }
+    }
+  ],
+  "Fraud_Injection_Rules": {
+    "strategy": "dedicated_fraudsters",
+    "fraud_user_ratio": 0.03,
+    "max_fraud_txns_per_user": 120,
+    "contaminate_normal_users": false,
+    "contamination_prob": 0.0
+  },
+  "Sequence_Rules": {
+    "enabled": true,
+    "max_chain_length": 80,
+    "inter_txn_gap_seconds": {
+      "min": 5,
+      "max": 120
+    },
+    "reuse_card_in_chain": true,
+    "reuse_merchant_in_chain": true
+  },
+  "Anomaly_Signals": {
+    "Micro-transaction BIN Probe": {
+      "transaction_amount": "< 2.00",
+      "velocity_per_hour": "> 30",
+      "unique_cards_per_ip": "> 20",
+      "foreign_ip_flag": "= 1",
+      "hour_of_day": "0–4"
+    },
+    "Graduated BIN Test": {
+      "transaction_amount": "1–50",
+      "merchant_repeat": "same merchant 3–8x",
+      "foreign_ip_flag": "= 1"
+    }
+  },
+  "Column_Definitions": {
+    "transaction_id": {
+      "type": "uuid"
+    },
+    "timestamp": {
+      "type": "datetime",
+      "range": [
+        "2022-01-01",
+        "2023-12-31"
+      ]
+    },
+    "user_id": {
+      "type": "string",
+      "cardinality": 800
+    },
+    "card_number": {
+      "type": "string",
+      "format": "16-digit"
+    },
+    "bin_number": {
+      "type": "string",
+      "format": "first-6-digits-of-card"
+    },
+    "merchant_id": {
+      "type": "string",
+      "cardinality": 120
+    },
+    "merchant_category": {
+      "type": "categorical",
+      "values": [
+        "Grocery",
+        "Retail",
+        "Restaurant",
+        "Gas",
+        "Travel",
+        "Entertainment"
+      ]
+    },
+    "transaction_amount": {
+      "type": "float",
+      "min": 0.01,
+      "max": 3000.0
+    },
+    "currency": {
+      "type": "categorical",
+      "values": [
+        "USD",
+        "EUR",
+        "GBP"
+      ]
+    },
+    "location": {
+      "type": "string"
+    },
+    "device_id": {
+      "type": "string"
+    },
+    "ip_address": {
+      "type": "ipv4"
+    },
+    "foreign_ip_flag": {
+      "type": "integer",
+      "values": [
+        0,
+        1
+      ]
+    },
+    "fraud_label": {
+      "type": "integer",
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  "Validation_Constraints": {
+    "transaction_amount": {
+      "min": 0.01,
+      "max": 50000.0
+    },
+    "fraud_ratio_actual": {
+      "min": 0.01,
+      "max": 0.99
+    },
+    "required_columns": [
+      "transaction_id",
+      "timestamp",
+      "user_id",
+      "card_number",
+      "bin_number",
+      "merchant_id",
+      "merchant_category",
+      "transaction_amount",
+      "currency",
+      "location",
+      "device_id",
+      "ip_address",
+      "fraud_label"
+    ]
+  }
+}

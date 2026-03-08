@@ -1,0 +1,370 @@
+2026-03-07 17:13:46 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:13:46 | core.pipeline                | INFO     | STEP 1 ▸ Interpreting scenario
+2026-03-07 17:13:46 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (10 chars)
+2026-03-07 17:13:46 | agents.scenario_interpreter  | WARNING  | Row count missing or invalid – defaulting to 10,000
+2026-03-07 17:13:46 | agents.scenario_interpreter  | WARNING  | Fraud ratio missing – defaulting to 5%%
+2026-03-07 17:13:46 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Generic Fraud' rows=10000 ratio=5.00% format=csv
+2026-03-07 17:13:46 | core.pipeline                | INFO     | Scenario: {
+  "scenario_name": "Generic Fraud",
+  "fraud_type": "Generic Fraud",
+  "description": "Custom fraud scenario as described by the user.",
+  "rows": 10000,
+  "fraud_ratio": 0.05,
+  "output_format": "csv"
+}
+2026-03-07 17:13:46 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:13:46 | core.pipeline                | INFO     | STEP 2 ▸ Generating blueprint
+2026-03-07 17:13:46 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Generic Fraud
+2026-03-07 17:13:46 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-07 17:13:46 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=2042 chars
+2026-03-07 17:18:03 | main                         | INFO     | CLI mode: running scenario from argument
+2026-03-07 17:18:03 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:18:03 | core.pipeline                | INFO     | STEP 1 ▸ Interpreting scenario
+2026-03-07 17:18:03 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (32 chars)
+2026-03-07 17:18:03 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Generic Fraud' rows=5000 ratio=33.00% format=csv
+2026-03-07 17:18:03 | core.pipeline                | INFO     | Scenario: {
+  "rows": 5000,
+  "fraud_ratio": 0.33,
+  "output_format": "csv",
+  "scenario_name": "Generic Fraud",
+  "fraud_type": "Generic Fraud",
+  "description": "Custom fraud scenario as described by the user."
+}
+2026-03-07 17:18:03 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:18:03 | core.pipeline                | INFO     | STEP 2 ▸ Generating blueprint
+2026-03-07 17:18:03 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Generic Fraud
+2026-03-07 17:18:03 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-07 17:18:03 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=2044 chars
+2026-03-07 17:22:15 | main                         | INFO     | CLI mode: running scenario from argument
+2026-03-07 17:22:15 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:22:15 | core.pipeline                | INFO     | STEP 1 ▸ Interpreting scenario
+2026-03-07 17:22:15 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (32 chars)
+2026-03-07 17:22:15 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Money Laundering'  rows=5000  ratio=33.00%  format=csv
+2026-03-07 17:22:15 | core.pipeline                | INFO     | Scenario: {
+  "scenario_name": "Money Laundering",
+  "rows": 5000,
+  "fraud_ratio": 0.33,
+  "output_format": "csv",
+  "fraud_type": "Financial Crime",
+  "description": "Illicit funds are passed through multiple transactions to obscure their origin and appear as legitimate income."
+}
+2026-03-07 17:22:15 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:22:15 | core.pipeline                | INFO     | STEP 2 ▸ Generating blueprint
+2026-03-07 17:22:15 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Money Laundering
+2026-03-07 17:22:15 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-07 17:22:15 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=2116 chars
+2026-03-07 17:24:42 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-07 17:24:42 | core.pipeline                | INFO     | STEP 3 ▸ Validating blueprint (round 1)
+2026-03-07 17:24:42 | agents.blueprint_validator   | WARNING  | Blueprint validation FAILED with 8 error(s)
+2026-03-07 17:24:42 | core.pipeline                | WARNING  | Blueprint invalid (8 errors) – requesting LLM fix
+2026-03-07 17:24:42 | agents.blueprint_generator   | INFO     | Requesting LLM blueprint fix for 8 error(s)
+2026-03-07 17:24:42 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=5196 chars
+2026-03-07 17:29:04 | core.pipeline                | INFO     | STEP 3 ▸ Validating blueprint (round 2)
+2026-03-07 17:29:04 | agents.blueprint_validator   | INFO     | Blueprint validation PASSED
+2026-03-07 17:29:04 | core.pipeline                | INFO     | Blueprint is valid ✓
+2026-03-07 17:29:04 | core.pipeline                | INFO     | Blueprint saved to: output\synthetic_datasets\money_laundering_blueprint.json
+2026-03-07 17:29:04 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:29:04 | core.pipeline                | INFO     | STEP 4 ▸ Generating code
+2026-03-07 17:29:04 | agents.code_generator        | INFO     | Generating code for scenario: Money Laundering → output\synthetic_datasets\money_laundering_synthetic_dataset.csv
+2026-03-07 17:29:04 | core.pipeline                | ERROR    | ❌ Pipeline FAILED: core.llm_interface.generate_response() got multiple values for keyword argument 'model_key'
+Traceback (most recent call last):
+  File "C:\Projects\PayU\fraud_generator\core\pipeline.py", line 104, in run
+    code = self.code_generator.generate(blueprint, output_path)
+  File "C:\Projects\PayU\fraud_generator\agents\code_generator.py", line 45, in generate
+    raw_code = generate_code_response(prompt, model_key=self.model_key)
+  File "C:\Projects\PayU\fraud_generator\core\llm_interface.py", line 103, in generate_code_response
+    return generate_response(prompt, model_key=CODE_MODEL, **kwargs)
+TypeError: core.llm_interface.generate_response() got multiple values for keyword argument 'model_key'
+2026-03-07 17:30:33 | main                         | INFO     | CLI mode: running scenario from argument
+2026-03-07 17:30:33 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:30:33 | core.pipeline                | INFO     | STEP 1 ▸ Interpreting scenario
+2026-03-07 17:30:33 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (32 chars)
+2026-03-07 17:30:33 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Money Laundering'  rows=5000  ratio=33.00%  format=csv
+2026-03-07 17:30:33 | core.pipeline                | INFO     | Scenario: {
+  "scenario_name": "Money Laundering",
+  "rows": 5000,
+  "fraud_ratio": 0.33,
+  "output_format": "csv",
+  "fraud_type": "Financial Crime",
+  "description": "Illicit funds are passed through multiple transactions to obscure their origin and appear as legitimate income."
+}
+2026-03-07 17:30:33 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:30:33 | core.pipeline                | INFO     | STEP 2 ▸ Generating blueprint
+2026-03-07 17:30:33 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Money Laundering
+2026-03-07 17:30:33 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-07 17:30:33 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=2116 chars
+2026-03-07 17:33:25 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-07 17:33:25 | core.pipeline                | INFO     | STEP 3 ▸ Validating blueprint (round 1)
+2026-03-07 17:33:25 | agents.blueprint_validator   | WARNING  | Blueprint validation FAILED with 8 error(s)
+2026-03-07 17:33:25 | core.pipeline                | WARNING  | Blueprint invalid (8 errors) – requesting LLM fix
+2026-03-07 17:33:25 | agents.blueprint_generator   | INFO     | Requesting LLM blueprint fix for 8 error(s)
+2026-03-07 17:33:25 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=5341 chars
+2026-03-07 17:37:45 | core.pipeline                | INFO     | STEP 3 ▸ Validating blueprint (round 2)
+2026-03-07 17:37:45 | agents.blueprint_validator   | INFO     | Blueprint validation PASSED
+2026-03-07 17:37:45 | core.pipeline                | INFO     | Blueprint is valid ✓
+2026-03-07 17:37:45 | core.pipeline                | INFO     | Blueprint saved to: output\synthetic_datasets\money_laundering_blueprint.json
+2026-03-07 17:37:45 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:37:45 | core.pipeline                | INFO     | STEP 4 ▸ Generating code
+2026-03-07 17:37:45 | agents.code_generator        | INFO     | Generating code for scenario: Money Laundering → output\synthetic_datasets\money_laundering_synthetic_dataset.csv
+2026-03-07 17:37:45 | core.llm_interface           | INFO     | LLM call | model=qwen2.5-coder:7b | prompt_len=6221 chars
+2026-03-07 17:41:30 | agents.code_generator        | INFO     | Code generated: 72 lines
+2026-03-07 17:41:30 | core.pipeline                | INFO     | Generated code saved to: output\synthetic_datasets\money_laundering_generator.py
+2026-03-07 17:41:30 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:41:30 | core.pipeline                | INFO     | STEP 5 ▸ Executing generated code
+2026-03-07 17:41:30 | core.execution_engine        | INFO     | Executing script: C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py (timeout=240s)
+2026-03-07 17:41:34 | core.execution_engine        | WARNING  | Execution FAILED (exit 1) | error: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <module>     main()   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 58, in main     fraud_df = generate_fraud_transactions(fraud_count, fake)   File "C:\Use
+2026-03-07 17:41:34 | core.pipeline                | WARNING  | Execution failed (attempt 1) – invoking ErrorFixAgent
+2026-03-07 17:41:34 | agents.error_fix_agent       | INFO     | Error fix attempt 1/5 | error snippet: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <mo …
+2026-03-07 17:41:34 | core.llm_interface           | INFO     | LLM call | model=qwen2.5-coder:7b | prompt_len=5737 chars
+2026-03-07 17:44:57 | agents.error_fix_agent       | INFO     | Fixed code received: 72 lines
+2026-03-07 17:44:57 | core.execution_engine        | INFO     | Executing script: C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py (timeout=240s)
+2026-03-07 17:44:58 | core.execution_engine        | WARNING  | Execution FAILED (exit 1) | error: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <module>     main()   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 58, in main     fraud_df = generate_fraud_transactions(fraud_count, fake)   File "C:\Use
+2026-03-07 17:44:58 | core.pipeline                | WARNING  | Execution failed (attempt 2) – invoking ErrorFixAgent
+2026-03-07 17:44:58 | agents.error_fix_agent       | INFO     | Error fix attempt 2/5 | error snippet: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <mo …
+2026-03-07 17:44:58 | core.llm_interface           | INFO     | LLM call | model=qwen2.5-coder:7b | prompt_len=5737 chars
+2026-03-07 17:48:13 | agents.error_fix_agent       | INFO     | Fixed code received: 72 lines
+2026-03-07 17:48:13 | core.execution_engine        | INFO     | Executing script: C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py (timeout=240s)
+2026-03-07 17:48:15 | core.execution_engine        | WARNING  | Execution FAILED (exit 1) | error: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <module>     main()   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 58, in main     fraud_df = generate_fraud_transactions(fraud_count, fake)   File "C:\Use
+2026-03-07 17:48:15 | core.pipeline                | WARNING  | Execution failed (attempt 3) – invoking ErrorFixAgent
+2026-03-07 17:48:15 | agents.error_fix_agent       | INFO     | Error fix attempt 3/5 | error snippet: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <mo …
+2026-03-07 17:48:15 | core.llm_interface           | INFO     | LLM call | model=qwen2.5-coder:7b | prompt_len=5737 chars
+2026-03-07 17:51:33 | agents.error_fix_agent       | INFO     | Fixed code received: 72 lines
+2026-03-07 17:51:33 | core.execution_engine        | INFO     | Executing script: C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py (timeout=240s)
+2026-03-07 17:51:35 | core.execution_engine        | WARNING  | Execution FAILED (exit 1) | error: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <module>     main()   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 58, in main     fraud_df = generate_fraud_transactions(fraud_count, fake)   File "C:\Use
+2026-03-07 17:51:35 | core.pipeline                | WARNING  | Execution failed (attempt 4) – invoking ErrorFixAgent
+2026-03-07 17:51:35 | agents.error_fix_agent       | INFO     | Error fix attempt 4/5 | error snippet: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <mo …
+2026-03-07 17:51:35 | core.llm_interface           | INFO     | LLM call | model=qwen2.5-coder:7b | prompt_len=5737 chars
+2026-03-07 17:54:40 | agents.error_fix_agent       | INFO     | Fixed code received: 72 lines
+2026-03-07 17:54:40 | core.execution_engine        | INFO     | Executing script: C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py (timeout=240s)
+2026-03-07 17:54:41 | core.execution_engine        | WARNING  | Execution FAILED (exit 1) | error: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <module>     main()   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 58, in main     fraud_df = generate_fraud_transactions(fraud_count, fake)   File "C:\Use
+2026-03-07 17:54:41 | core.pipeline                | WARNING  | Execution failed (attempt 5) – invoking ErrorFixAgent
+2026-03-07 17:54:41 | agents.error_fix_agent       | INFO     | Error fix attempt 5/5 | error snippet: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <mo …
+2026-03-07 17:54:41 | core.llm_interface           | INFO     | LLM call | model=qwen2.5-coder:7b | prompt_len=5737 chars
+2026-03-07 17:57:50 | agents.error_fix_agent       | INFO     | Fixed code received: 72 lines
+2026-03-07 17:57:50 | core.execution_engine        | INFO     | Executing script: C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py (timeout=240s)
+2026-03-07 17:57:52 | core.execution_engine        | WARNING  | Execution FAILED (exit 1) | error: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <module>     main()   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 58, in main     fraud_df = generate_fraud_transactions(fraud_count, fake)   File "C:\Use
+2026-03-07 17:57:52 | core.pipeline                | ERROR    | ❌ Pipeline FAILED: Code execution failed after 5 fix attempts.
+Last error: Traceback (most recent call last):
+  File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <module>
+    main()
+  File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 58, in main
+    fraud_df = generate_fraud_transactions(fraud_count, fake)
+  File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 34, in generate_fraud_transactions
+    transaction_id = fake.unique.random_int(min=1, max=5000)
+  File "C:\Projects\PayU\.venv\lib\site-packages\faker\proxy.py", line 398, in wrapper
+    raise UniquenessException(f"Got duplicated values after {_UNIQUE_ATTEMPTS:,} iterations.")
+faker.exceptions.UniquenessException: Got duplicated values after 1,000 iterations.
+Traceback (most recent call last):
+  File "C:\Projects\PayU\fraud_generator\core\pipeline.py", line 115, in run
+    code = self._execute_with_fix_loop(blueprint, code, output_path)
+  File "C:\Projects\PayU\fraud_generator\core\pipeline.py", line 190, in _execute_with_fix_loop
+    raise RuntimeError(
+RuntimeError: Code execution failed after 5 fix attempts.
+Last error: Traceback (most recent call last):
+  File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 73, in <module>
+    main()
+  File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 58, in main
+    fraud_df = generate_fraud_transactions(fraud_count, fake)
+  File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 34, in generate_fraud_transactions
+    transaction_id = fake.unique.random_int(min=1, max=5000)
+  File "C:\Projects\PayU\.venv\lib\site-packages\faker\proxy.py", line 398, in wrapper
+    raise UniquenessException(f"Got duplicated values after {_UNIQUE_ATTEMPTS:,} iterations.")
+faker.exceptions.UniquenessException: Got duplicated values after 1,000 iterations.
+2026-03-07 17:58:02 | main                         | INFO     | CLI mode: running scenario from argument
+2026-03-07 17:58:02 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:58:02 | core.pipeline                | INFO     | STEP 1 ▸ Interpreting scenario
+2026-03-07 17:58:02 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (32 chars)
+2026-03-07 17:58:02 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Money Laundering'  rows=5000  ratio=33.00%  format=csv
+2026-03-07 17:58:02 | core.pipeline                | INFO     | Scenario: {
+  "scenario_name": "Money Laundering",
+  "rows": 5000,
+  "fraud_ratio": 0.33,
+  "output_format": "csv",
+  "fraud_type": "Financial Crime",
+  "description": "Illicit funds are passed through multiple transactions to obscure their origin and appear as legitimate income."
+}
+2026-03-07 17:58:02 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 17:58:02 | core.pipeline                | INFO     | STEP 2 ▸ Generating blueprint
+2026-03-07 17:58:02 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Money Laundering
+2026-03-07 17:58:02 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-07 17:58:02 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=2116 chars
+2026-03-07 18:00:31 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-07 18:00:31 | core.pipeline                | INFO     | STEP 3 ▸ Validating blueprint (round 1)
+2026-03-07 18:00:31 | agents.blueprint_validator   | WARNING  | Blueprint validation FAILED with 8 error(s)
+2026-03-07 18:00:31 | core.pipeline                | WARNING  | Blueprint invalid (8 errors) – requesting LLM fix
+2026-03-07 18:00:31 | agents.blueprint_generator   | INFO     | Requesting LLM blueprint fix for 8 error(s)
+2026-03-07 18:00:31 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=4986 chars
+2026-03-07 18:04:35 | core.pipeline                | INFO     | STEP 3 ▸ Validating blueprint (round 2)
+2026-03-07 18:04:35 | agents.blueprint_validator   | INFO     | Blueprint validation PASSED
+2026-03-07 18:04:35 | core.pipeline                | INFO     | Blueprint is valid ✓
+2026-03-07 18:04:35 | core.pipeline                | INFO     | Blueprint saved to: output\synthetic_datasets\money_laundering_blueprint.json
+2026-03-07 18:04:35 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 18:04:35 | core.pipeline                | INFO     | STEP 4 ▸ Generating code
+2026-03-07 18:04:35 | agents.code_generator        | INFO     | Generating code for scenario: Money Laundering → output\synthetic_datasets\money_laundering_synthetic_dataset.csv
+2026-03-07 18:04:35 | core.llm_interface           | INFO     | LLM call | model=qwen2.5-coder:7b | prompt_len=6329 chars
+2026-03-07 18:07:59 | agents.code_generator        | INFO     | Code generated: 68 lines
+2026-03-07 18:07:59 | core.pipeline                | INFO     | Generated code saved to: output\synthetic_datasets\money_laundering_generator.py
+2026-03-07 18:07:59 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 18:07:59 | core.pipeline                | INFO     | STEP 5 ▸ Executing generated code
+2026-03-07 18:07:59 | core.execution_engine        | INFO     | Executing script: C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py (timeout=300s)
+2026-03-07 18:08:00 | core.execution_engine        | WARNING  | Execution FAILED (exit 1) | error: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 69, in <module>     main()   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 53, in main     normal_df = generate_normal_transactions(normal_rows, fake)   File "C:\U
+2026-03-07 18:08:00 | core.pipeline                | WARNING  | Execution failed (attempt 1) – invoking ErrorFixAgent
+2026-03-07 18:08:00 | agents.error_fix_agent       | INFO     | Error fix attempt 1/5 | error snippet: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 69, in <mo …
+2026-03-07 18:08:00 | core.llm_interface           | INFO     | LLM call | model=qwen2.5-coder:7b | prompt_len=5116 chars
+2026-03-07 18:10:49 | agents.error_fix_agent       | INFO     | Fixed code received: 68 lines
+2026-03-07 18:10:49 | core.execution_engine        | INFO     | Executing script: C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py (timeout=300s)
+2026-03-07 18:10:50 | core.execution_engine        | WARNING  | Execution FAILED (exit 1) | error: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 69, in <module>     main()   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 53, in main     normal_df = generate_normal_transactions(normal_rows, fake)   File "C:\U
+2026-03-07 18:10:50 | core.pipeline                | WARNING  | Execution failed (attempt 2) – invoking ErrorFixAgent
+2026-03-07 18:10:50 | agents.error_fix_agent       | INFO     | Error fix attempt 2/5 | error snippet: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 69, in <mo …
+2026-03-07 18:10:50 | core.llm_interface           | INFO     | LLM call | model=qwen2.5-coder:7b | prompt_len=5116 chars
+2026-03-07 18:13:34 | agents.error_fix_agent       | INFO     | Fixed code received: 68 lines
+2026-03-07 18:13:34 | core.execution_engine        | INFO     | Executing script: C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py (timeout=300s)
+2026-03-07 18:13:35 | core.execution_engine        | WARNING  | Execution FAILED (exit 1) | error: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 69, in <module>     main()   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 53, in main     normal_df = generate_normal_transactions(normal_rows, fake)   File "C:\U
+2026-03-07 18:13:35 | core.pipeline                | WARNING  | Execution failed (attempt 3) – invoking ErrorFixAgent
+2026-03-07 18:13:35 | agents.error_fix_agent       | INFO     | Error fix attempt 3/5 | error snippet: Traceback (most recent call last):   File "C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py", line 69, in <mo …
+2026-03-07 18:13:35 | core.llm_interface           | INFO     | LLM call | model=qwen2.5-coder:7b | prompt_len=5283 chars
+2026-03-07 18:16:40 | main                         | INFO     | CLI mode: running scenario from argument
+2026-03-07 18:16:40 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 18:16:40 | core.pipeline                | INFO     | STEP 1 ▸ Interpreting scenario
+2026-03-07 18:16:40 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (32 chars)
+2026-03-07 18:16:40 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Money Laundering'  rows=5000  ratio=33.00%  format=csv
+2026-03-07 18:16:40 | core.pipeline                | INFO     | Scenario: {
+  "scenario_name": "Money Laundering",
+  "rows": 5000,
+  "fraud_ratio": 0.33,
+  "output_format": "csv",
+  "fraud_type": "Financial Crime",
+  "description": "Illicit funds are passed through multiple transactions to obscure their origin and appear as legitimate income."
+}
+2026-03-07 18:16:40 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 18:16:40 | core.pipeline                | INFO     | STEP 2 ▸ Generating blueprint
+2026-03-07 18:16:40 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Money Laundering
+2026-03-07 18:16:40 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-07 18:16:40 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=2116 chars
+2026-03-07 18:19:40 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-07 18:19:40 | core.pipeline                | INFO     | STEP 3 ▸ Validating blueprint (round 1)
+2026-03-07 18:19:40 | core.pipeline                | ERROR    | ❌ Pipeline FAILED: 'list' object has no attribute 'get'
+Traceback (most recent call last):
+  File "C:\Projects\PayU\fraud_generator\core\pipeline.py", line 92, in run
+    blueprint = self._generate_and_validate_blueprint(scenario_params)
+  File "C:\Projects\PayU\fraud_generator\core\pipeline.py", line 148, in _generate_and_validate_blueprint
+    is_valid, errors = self.bp_validator.validate(blueprint)
+  File "C:\Projects\PayU\fraud_generator\agents\blueprint_validator.py", line 46, in validate
+    errors.extend(self._check_dataset_specs(blueprint))
+  File "C:\Projects\PayU\fraud_generator\agents\blueprint_validator.py", line 74, in _check_dataset_specs
+    specs = bp.get("Dataset_Specifications", {})
+AttributeError: 'list' object has no attribute 'get'
+2026-03-07 18:19:50 | main                         | INFO     | CLI mode: running scenario from argument
+2026-03-07 18:19:50 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 18:19:50 | core.pipeline                | INFO     | STEP 1 ▸ Interpreting scenario
+2026-03-07 18:19:50 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (32 chars)
+2026-03-07 18:19:50 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Money Laundering'  rows=5000  ratio=33.00%  format=csv
+2026-03-07 18:19:50 | core.pipeline                | INFO     | Scenario: {
+  "scenario_name": "Money Laundering",
+  "rows": 5000,
+  "fraud_ratio": 0.33,
+  "output_format": "csv",
+  "fraud_type": "Financial Crime",
+  "description": "Illicit funds are passed through multiple transactions to obscure their origin and appear as legitimate income."
+}
+2026-03-07 18:19:50 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 18:19:50 | core.pipeline                | INFO     | STEP 2 ▸ Generating blueprint
+2026-03-07 18:19:50 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Money Laundering
+2026-03-07 18:19:50 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-07 18:19:50 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=2116 chars
+2026-03-07 18:22:04 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-07 18:22:04 | core.pipeline                | INFO     | STEP 3 ▸ Validating blueprint (round 1)
+2026-03-07 18:22:04 | agents.blueprint_validator   | WARNING  | Blueprint validation FAILED with 8 error(s)
+2026-03-07 18:22:04 | core.pipeline                | WARNING  | Blueprint invalid (8 errors) – requesting LLM fix
+2026-03-07 18:22:04 | agents.blueprint_generator   | INFO     | Requesting LLM blueprint fix for 8 error(s)
+2026-03-07 18:22:04 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=4968 chars
+2026-03-07 18:25:52 | core.pipeline                | INFO     | STEP 3 ▸ Validating blueprint (round 2)
+2026-03-07 18:25:52 | agents.blueprint_validator   | INFO     | Blueprint validation PASSED
+2026-03-07 18:25:52 | core.pipeline                | INFO     | Blueprint is valid ✓
+2026-03-07 18:25:52 | core.pipeline                | INFO     | Blueprint saved to: output\synthetic_datasets\money_laundering_blueprint.json
+2026-03-07 18:25:52 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 18:25:52 | core.pipeline                | INFO     | STEP 4 ▸ Generating code
+2026-03-07 18:25:52 | agents.code_generator        | INFO     | Generating code for scenario: Money Laundering → output\synthetic_datasets\money_laundering_synthetic_dataset.csv
+2026-03-07 18:25:52 | core.llm_interface           | INFO     | LLM call | model=qwen2.5-coder:7b | prompt_len=5950 chars
+2026-03-07 18:29:16 | agents.code_generator        | INFO     | Code generated: 94 lines
+2026-03-07 18:29:16 | core.pipeline                | INFO     | Generated code saved to: output\synthetic_datasets\money_laundering_generator.py
+2026-03-07 18:29:16 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 18:29:16 | core.pipeline                | INFO     | STEP 5 ▸ Executing generated code
+2026-03-07 18:29:16 | core.execution_engine        | INFO     | Executing script: C:\Users\doore\AppData\Local\Temp\fraud_generator_script.py (timeout=420s)
+2026-03-07 18:29:18 | core.execution_engine        | INFO     | Execution SUCCESS | stdout: Dataset saved to output\synthetic_datasets\money_laundering_synthetic_dataset.csv
+Total rows: 4999
+Fraudulent rows: 1650
+2026-03-07 18:29:18 | core.pipeline                | INFO     | Code executed successfully on attempt 1 ✓
+2026-03-07 18:29:18 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 18:29:18 | core.pipeline                | INFO     | ✅ Pipeline COMPLETE in 567.6s | output: output\synthetic_datasets\money_laundering_synthetic_dataset.csv
+2026-03-07 19:20:31 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 19:20:31 | core.pipeline                | INFO     | STEP 1 ▸ Interpreting scenario
+2026-03-07 19:20:31 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (32 chars)
+2026-03-07 19:20:31 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Money Laundering'  rows=5000  ratio=33.00%  format=csv
+2026-03-07 19:20:31 | core.pipeline                | INFO     | Scenario: {
+  "scenario_name": "Money Laundering",
+  "rows": 5000,
+  "fraud_ratio": 0.33,
+  "output_format": "csv",
+  "fraud_type": "Financial Crime",
+  "description": "Illicit funds are passed through multiple transactions to obscure their origin and appear as legitimate income."
+}
+2026-03-07 19:20:31 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 19:20:31 | core.pipeline                | INFO     | STEP 2 ▸ Generating blueprint
+2026-03-07 19:20:31 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Money Laundering
+2026-03-07 19:20:31 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-07 19:20:31 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=7826 chars
+2026-03-07 19:25:34 | core.llm_interface           | WARNING  | LLM call failed (attempt 1/3): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=300) – retrying in 2.0s
+2026-03-07 19:30:03 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-07 19:30:03 | core.pipeline                | INFO     | STEP 2.1 ▸ Validating blueprint
+2026-03-07 19:30:03 | agents.blueprint_validator   | INFO     | Blueprint VALID ✓
+2026-03-07 19:30:03 | core.pipeline                | INFO     | Blueprint valid ✓
+2026-03-07 19:30:03 | core.pipeline                | INFO     | Blueprint saved: output\synthetic_datasets\money_laundering_blueprint.json
+2026-03-07 19:30:03 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 19:30:03 | core.pipeline                | INFO     | STEP 3 ▸ Generating dataset via DatasetEngine
+2026-03-07 19:30:04 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 19:30:04 | core.pipeline                | INFO     | ✅ Pipeline COMPLETE in 572.1s | rows=5000 fraud=1650 (33.0%) | output=output\synthetic_datasets\money_laundering_synthetic_dataset.csv
+2026-03-07 22:32:41 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 22:32:41 | core.pipeline                | INFO     | STEP 1 ▸ Interpreting scenario
+2026-03-07 22:32:41 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (26 chars)
+2026-03-07 22:32:41 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=5000  ratio=33.00%  format=csv
+2026-03-07 22:32:41 | core.pipeline                | INFO     | Scenario: {
+  "scenario_name": "Bin Attack",
+  "rows": 5000,
+  "fraud_ratio": 0.33,
+  "output_format": "csv",
+  "fraud_type": "Card-Not-Present Fraud",
+  "description": "Attacker systematically tests BIN ranges with small transactions to identify valid card numbers before large-scale fraud."
+}
+2026-03-07 22:32:41 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-07 22:32:41 | core.pipeline                | INFO     | STEP 2 ▸ Generating blueprint
+2026-03-07 22:32:41 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-07 22:32:41 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-07 22:32:41 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=7826 chars
+2026-03-08 15:03:46 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-08 15:03:46 | core.pipeline                | INFO     | STEP 1 ▸ Interpreting scenario
+2026-03-08 15:03:46 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (26 chars)
+2026-03-08 15:03:46 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=5000  ratio=33.00%  format=csv
+2026-03-08 15:03:46 | core.pipeline                | INFO     | Scenario: {
+  "scenario_name": "Bin Attack",
+  "rows": 5000,
+  "fraud_ratio": 0.33,
+  "output_format": "csv",
+  "fraud_type": "Card-Not-Present Fraud",
+  "description": "Attacker systematically tests BIN ranges with small transactions to identify valid card numbers before large-scale fraud."
+}
+2026-03-08 15:03:46 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-08 15:03:46 | core.pipeline                | INFO     | STEP 2 ▸ Generating blueprint
+2026-03-08 15:03:46 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-08 15:03:46 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-08 15:03:46 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=7826 chars
+2026-03-08 15:08:48 | core.llm_interface           | WARNING  | LLM call failed (attempt 1/3): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=300) – retrying in 2.0s
+2026-03-08 15:13:21 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-08 15:13:21 | core.pipeline                | INFO     | STEP 2.1 ▸ Validating blueprint
+2026-03-08 15:13:21 | agents.blueprint_validator   | INFO     | Blueprint VALID ✓
+2026-03-08 15:13:21 | core.pipeline                | INFO     | Blueprint valid ✓
+2026-03-08 15:13:21 | core.pipeline                | INFO     | Blueprint saved: output\synthetic_datasets\bin_attack_blueprint.json
+2026-03-08 15:13:21 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-08 15:13:21 | core.pipeline                | INFO     | STEP 3 ▸ Generating dataset via DatasetEngine
+2026-03-08 15:13:22 | core.pipeline                | INFO     | ════════════════════════════════════════════════════════════
+2026-03-08 15:13:22 | core.pipeline                | INFO     | ✅ Pipeline COMPLETE in 575.7s | rows=5000 fraud=1650 (33.0%) | output=output\synthetic_datasets\bin_attack_synthetic_dataset.csv
