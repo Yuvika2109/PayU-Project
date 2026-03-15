@@ -1,4 +1,4 @@
-# ── Python ────────────────────────────────────────────────────────────────────
+# ── Python ─────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
@@ -10,25 +10,31 @@ build/
 eggs/
 *.whl
 
-# ── Virtual environment ───────────────────────────────────────────────────────
+# ── Virtual Environment ────────────────────────────
 venv/
 .venv/
 env/
 .env/
 
-# ── IDE / Editor ──────────────────────────────────────────────────────────────
+# ── IDE / Editor ───────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# ── OS Files ───────────────────────────────────────
 .DS_Store
 Thumbs.db
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 
-# ── Streamlit ─────────────────────────────────────────────────────────────────
+# ── Streamlit ──────────────────────────────────────
 .streamlit/secrets.toml
 
-# ── Generated outputs ─────────────────────────────────────────────────────────
+# ── Generated Outputs ──────────────────────────────
 output/
 *.csv
 *.parquet
@@ -39,23 +45,15 @@ transactions.csv
 test_output.csv
 test_validation.csv
 
-# ── Logs ──────────────────────────────────────────────────────────────────────
+# ── Logs ───────────────────────────────────────────
 *.log
 fraud_generator.log
 fraud_generator/fraud_generator.log
 
-# ── Environment variables ─────────────────────────────────────────────────────
+# ── Environment Variables ──────────────────────────
 .env
 .env.local
 
-# ── Jupyter ───────────────────────────────────────────────────────────────────
+# ── Jupyter ────────────────────────────────────────
 .ipynb_checkpoints/
 *.ipynb
-
-# ── OS files ──────────────────────────────────────────────────────────────────
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
