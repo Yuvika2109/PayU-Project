@@ -27,7 +27,7 @@ AVAILABLE_MODELS = {
 }
 
 # Primary model for blueprint & scenario interpretation
-PRIMARY_MODEL = os.getenv("PRIMARY_MODEL", "llama3")
+PRIMARY_MODEL = os.getenv("PRIMARY_MODEL", "llama3.2:3b")
 
 # Model used for code generation & error fixing
 CODE_MODEL = os.getenv("CODE_MODEL", "qwen2.5-coder")

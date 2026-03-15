@@ -11,7 +11,7 @@ The blueprint prompt is ~7800 chars.  On modest hardware llama3 can take
   1. timeout raised from 300 s → OLLAMA_REQUEST_TIMEOUT (default 900 s, ~15 min)
   2. num_ctx capped at OLLAMA_NUM_CTX (default 4096) so Ollama doesn't allocate
      a huge KV-cache that dramatically slows time-to-first-token.
-
+he
 Both values are env-var overridable in .env / environment.
 """
 
