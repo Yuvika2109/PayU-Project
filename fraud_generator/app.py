@@ -248,6 +248,12 @@ def run_pipeline(user_input: str = None, form_params: dict = None):
     try:
         bp_agent = BlueprintGeneratorAgent()
         blueprint = bp_agent.generate(params)
+
+        # Override LLM values with user's exact parameters
+        # (LLM sometimes returns 6.0 instead of 0.06 for 6%)
+        blueprint["Dataset_Specifications"]["fraud_ratio"] = params["fraud_ratio"]
+        blueprint["Dataset_Specifications"]["total_rows"] = params["rows"]
+
         st.session_state["blueprint"] = blueprint
         add_msg("✅ Blueprint generated successfully.", "done")
     except Exception as e:
