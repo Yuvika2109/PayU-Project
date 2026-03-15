@@ -1,17 +1,27 @@
 """
-agents/scenario_interpreter.py
+agents/scenario_interpreter.py  (v3)
 Converts free-text user input into a structured scenario parameter dict.
 
-Supports two formats:
+Supports THREE input modes — tried in order:
 
-  Labelled (multi-line):
-    Fraud Scenario: Money Laundering
-    Rows: 5000
-    Fraud Ratio: 33%
-    Output Format: CSV
+  1. Labelled (multi-line)  ── detected by label:value patterns
+       Fraud Scenario: Money Laundering
+       Rows: 5000
+       Fraud Ratio: 33%
+       Output Format: CSV
 
-  Inline (comma-separated):
-    Money Laundering, 5000, 33%, csv
+  2. Inline (comma-separated)  ── short comma-split tokens, no sentence structure
+       Money Laundering, 5000, 33%, csv
+
+  3. Natural-language sentence  ── anything that doesn't match above (NEW)
+       "Generate a BIN attack dataset with 50,000 transactions,
+        around 7% fraud, and save it as parquet."
+
+       "I need card testing fraud data — 20k rows, 10 percent fraud
+        rate, CSV format please."
+
+       "Create money laundering data. Use 5000 rows with a one-third
+        fraud ratio. Output should be JSON."
 """
 
 from __future__ import annotations
@@ -104,20 +114,115 @@ _DEFAULT_SCENARIO = {
 
 # ─── Output Format Aliases ────────────────────────────────────────────────────
 _FORMAT_MAP: Dict[str, str] = {
-    "csv": "csv",
-    "json": "json",
+    "csv":     "csv",
+    "json":    "json",
     "parquet": "parquet",
-    "excel": "excel",
-    "xlsx": "excel",
-    "xls": "excel",
+    "excel":   "excel",
+    "xlsx":    "excel",
+    "xls":     "excel",
 }
 
 _NUMERIC_LIKE = re.compile(r"^[\d,_%.\s]+$")
 
 
+# ─── NLP Extractor (new in v3) ────────────────────────────────────────────────
+
+class NLPScenarioExtractor:
+    """
+    Uses the LLM to extract structured fields from a free-form sentence.
+
+    Asks the LLM to return a small JSON object with exactly four keys:
+        scenario_name, rows, fraud_ratio, output_format
+
+    Any field the LLM cannot determine is returned as null; downstream
+    _fill_defaults() substitutes sensible values for anything missing.
+    """
+
+    _PROMPT = """\
+You are a data extraction assistant. Extract fraud dataset parameters from the user's request.
+
+Return ONLY a valid JSON object with exactly these four keys:
+  "scenario_name"  : string  — the fraud scenario type (e.g. "BIN Attack", "Money Laundering")
+  "rows"           : integer — total number of rows/transactions requested, or null if not stated
+  "fraud_ratio"    : float   — fraud ratio as a decimal between 0 and 1, or null if not stated
+                               (convert percentages: "10%" → 0.10, "one-third" → 0.33)
+  "output_format"  : string  — one of: csv, json, parquet, excel — or null if not stated
+
+Rules:
+- "k" or "thousand" after a number means ×1000  (e.g. "50k" → 50000, "20 thousand" → 20000).
+- "million" or "M" means ×1000000.
+- Written numbers: "twenty thousand" → 20000, "half a million" → 500000.
+- Fraud ratio: "10%", "10 percent", "one-third" → 0.33, "a third" → 0.33, "one in ten" → 0.10.
+- Normalise scenario names (e.g. "card testing attack" → "Card Testing").
+- If a field is genuinely absent, return null — do NOT guess.
+- Return ONLY the JSON object — no markdown, no explanation.
+
+User request:
+{user_input}
+"""
+
+    def extract(self, raw_input: str) -> Dict[str, Any]:
+        """
+        Send raw_input to the LLM and return a partial params dict.
+        Falls back to an empty dict on any LLM or parse error so the
+        caller's regex fallback + defaults can still fill in the gaps.
+        """
+        try:
+            from core.llm_interface import generate_response
+            from utils.json_parser import extract_json
+
+            prompt = self._PROMPT.format(user_input=raw_input.strip())
+            logger.debug("NLP extractor prompt (%d chars)", len(prompt))
+
+            raw = generate_response(prompt, temperature=0.0, max_tokens=256)
+            logger.debug("NLP extractor raw response: %.300s", raw)
+
+            parsed = extract_json(raw)
+            if not isinstance(parsed, dict):
+                logger.warning("NLP extractor: non-dict response (%s)", type(parsed))
+                return {}
+
+            params: Dict[str, Any] = {}
+
+            sn = parsed.get("scenario_name")
+            if isinstance(sn, str) and sn.strip():
+                params["scenario_name"] = sn.strip()
+
+            rows = parsed.get("rows")
+            if isinstance(rows, (int, float)) and rows and rows > 0:
+                params["rows"] = int(rows)
+
+            ratio = parsed.get("fraud_ratio")
+            if isinstance(ratio, (int, float)) and ratio is not None:
+                r = float(ratio)
+                if r > 1.0:          # LLM accidentally returned e.g. 10 instead of 0.10
+                    r = r / 100.0
+                params["fraud_ratio"] = round(r, 4)
+
+            fmt = parsed.get("output_format")
+            if isinstance(fmt, str) and fmt.strip():
+                params["output_format"] = _FORMAT_MAP.get(
+                    fmt.lower().strip(), fmt.lower().strip()
+                )
+
+            logger.info("NLP extractor result: %s", params)
+            return params
+
+        except Exception as exc:   # noqa: BLE001
+            logger.warning("NLP extractor failed (%s) — regex fallback will run.", exc)
+            return {}
+
+
+# ─── Main Interpreter Agent ───────────────────────────────────────────────────
+
 class ScenarioInterpreterAgent:
     """
     Parse raw user input into a normalised scenario parameter dict.
+
+    Detection order:
+      1. Labelled  (label:value pairs present)  → _parse_labelled
+      2. Positional (comma-separated, short tokens, no sentence structure) → _parse_positional
+      3. Natural language sentence → NLPScenarioExtractor + regex safety-net
 
     Output schema::
 
@@ -126,20 +231,40 @@ class ScenarioInterpreterAgent:
             "fraud_type":    str,
             "description":   str,
             "rows":          int,
-            "fraud_ratio":   float,   # 0.0 - 1.0
+            "fraud_ratio":   float,   # 0.0 – 1.0
             "output_format": str,     # "csv" | "json" | "parquet" | "excel"
         }
     """
 
+    def __init__(self):
+        self._nlp = NLPScenarioExtractor()
+
     def interpret(self, raw_input: str) -> Dict[str, Any]:
-        """Main entry point. Accepts multi-line labelled or comma-separated input."""
+        """Main entry point. Accepts labelled, inline, or natural-language input."""
         logger.info("Interpreting scenario input (%d chars)", len(raw_input))
         text = raw_input.strip()
 
+        # ── Choose parsing strategy ───────────────────────────────────────────
         if self._looks_labelled(text):
+            logger.info("Input mode: LABELLED")
             params = self._parse_labelled(text)
-        else:
+
+        elif self._looks_positional(text):
+            logger.info("Input mode: POSITIONAL")
             params = self._parse_positional(text)
+
+        else:
+            logger.info("Input mode: NATURAL LANGUAGE — invoking NLP extractor")
+            params = self._nlp.extract(text)
+
+            # Regex safety-net: fill anything the LLM missed
+            fallback = self._regex_number_fallback(text)
+            for k, v in fallback.items():
+                params.setdefault(k, v)
+
+            # Last-resort scenario name: scan sentence for known keywords
+            if not params.get("scenario_name"):
+                params["scenario_name"] = self._scenario_from_sentence(text) or ""
 
         self._fill_defaults(params)
         self._enrich_scenario(params)
@@ -153,10 +278,11 @@ class ScenarioInterpreterAgent:
         )
         return params
 
-    # ─── Format Detection ─────────────────────────────────────────────────────
+    # ─── Input-Mode Detection ─────────────────────────────────────────────────
 
     @staticmethod
     def _looks_labelled(text: str) -> bool:
+        """True when text contains explicit label:value pairs."""
         label_pattern = re.compile(
             r"(?:fraud[\s_-]?scenario|scenario|name|rows?|total[\s_-]?rows?"
             r"|count|size|fraud[\s_-]?ratio|ratio|rate|output[\s_-]?format|format)\s*[:\-=]",
@@ -164,7 +290,25 @@ class ScenarioInterpreterAgent:
         )
         return bool(label_pattern.search(text))
 
-    # ─── Labelled Parser ──────────────────────────────────────────────────────
+    @staticmethod
+    def _looks_positional(text: str) -> bool:
+        """
+        True for short comma-separated lists like 'Money Laundering, 5000, 33%, csv'.
+        A positional input:
+          - has no newlines (multi-line → labelled)
+          - splits into 2–6 comma-separated parts
+          - every part is a short token (≤ 3 words) — not a sentence fragment
+            (> 3 words per part signals written numbers / natural language phrases
+             like "half a million rows" or "one third fraud rate")
+        """
+        if "\n" in text:
+            return False
+        parts = [p.strip() for p in text.split(",") if p.strip()]
+        if len(parts) < 2:
+            return False
+        return all(len(p.split()) <= 3 for p in parts)
+
+    # ─── Labelled Parser (unchanged from v2) ─────────────────────────────────
 
     def _parse_labelled(self, text: str) -> Dict[str, Any]:
         params: Dict[str, Any] = {}
@@ -183,7 +327,7 @@ class ScenarioInterpreterAgent:
         )
         return {k: v for k, v in params.items() if v is not None}
 
-    # ─── Positional Parser ────────────────────────────────────────────────────
+    # ─── Positional Parser (unchanged from v2) ────────────────────────────────
 
     def _parse_positional(self, text: str) -> Dict[str, Any]:
         """Parse: 'Money Laundering, 5000, 33%, csv'"""
@@ -197,9 +341,9 @@ class ScenarioInterpreterAgent:
         remaining_start = 0
 
         for i, part in enumerate(parts):
-            looks_int = bool(re.match(r"^[\d,_]+$", part))
-            looks_ratio = bool(re.search(r"\d.*%", part))
-            looks_float = bool(re.match(r"^0?\.\d+$", part))
+            looks_int    = bool(re.match(r"^[\d,_]+$", part))
+            looks_ratio  = bool(re.search(r"\d.*%", part))
+            looks_float  = bool(re.match(r"^0?\.\d+$", part))
             looks_format = part.lower() in _FORMAT_MAP
 
             if looks_int or looks_ratio or looks_float or looks_format:
@@ -239,7 +383,57 @@ class ScenarioInterpreterAgent:
 
         return {k: v for k, v in params.items() if v is not None}
 
-    # ─── Field Helpers ────────────────────────────────────────────────────────
+    # ─── NL Helpers (new in v3) ───────────────────────────────────────────────
+
+    def _regex_number_fallback(self, text: str) -> Dict[str, Any]:
+        """
+        Lightweight regex pass over free-text to catch numbers/ratios/formats
+        the LLM may have missed. Never overwrites fields already extracted.
+        """
+        params: Dict[str, Any] = {}
+
+        # Rows — various natural forms
+        row_patterns = [
+            (r"(\d[\d,]*)\s*k\b",                                             1_000),
+            (r"(\d[\d,]*)\s*(?:thousand)\b",                                  1_000),
+            (r"(\d[\d,]*)\s*(?:million|M)\b",                             1_000_000),
+            (r"(\d[\d,]*)\s*(?:rows?|transactions?|records?|samples?|entries)", 1),
+        ]
+        for pat, multiplier in row_patterns:
+            m = re.search(pat, text, re.IGNORECASE)
+            if m and "rows" not in params:
+                try:
+                    params["rows"] = int(m.group(1).replace(",", "")) * multiplier
+                except ValueError:
+                    pass
+                break
+
+        # Fraud ratio — percent or decimal
+        for pat in [r"(\d+(?:\.\d+)?)\s*(?:%|percent(?:age)?)", r"\b(0\.\d+)\b"]:
+            m = re.search(pat, text, re.IGNORECASE)
+            if m and "fraud_ratio" not in params:
+                r = self._parse_ratio(m.group(0))
+                if r is not None:
+                    params["fraud_ratio"] = r
+                break
+
+        # Output format keyword anywhere in the sentence
+        for fmt_key in _FORMAT_MAP:
+            if re.search(r"\b" + fmt_key + r"\b", text, re.IGNORECASE):
+                params.setdefault("output_format", _FORMAT_MAP[fmt_key])
+                break
+
+        return {k: v for k, v in params.items() if v is not None}
+
+    def _scenario_from_sentence(self, text: str) -> Optional[str]:
+        """Scan the sentence for a known scenario keyword. Returns Title Case or None."""
+        lower = text.lower()
+        for key in sorted(KNOWN_SCENARIOS, key=len, reverse=True):
+            if key in lower:
+                return key.title()
+        return None
+
+    # ─── Field Helpers (unchanged from v2) ───────────────────────────────────
 
     def _extract_str(self, text: str, pattern: str) -> Optional[str]:
         m = re.search(pattern, text, re.IGNORECASE)
@@ -276,7 +470,7 @@ class ScenarioInterpreterAgent:
         except (ValueError, TypeError):
             return None
 
-    # ─── Defaults & Enrichment ────────────────────────────────────────────────
+    # ─── Defaults & Enrichment (unchanged from v2) ───────────────────────────
 
     def _fill_defaults(self, params: Dict[str, Any]) -> None:
         if not params.get("scenario_name"):

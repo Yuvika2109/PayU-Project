@@ -1,7 +1,13 @@
 """
-core/pipeline.py  (v2)
-Orchestration pipeline — now uses DatasetEngine directly for generation.
+core/pipeline.py  (v3)
+Orchestration pipeline — uses DatasetEngine directly for generation.
 The LLM is only used for blueprint creation; no LLM-generated code is executed.
+
+v3 change: added run_from_params() so main.py can interpret the scenario
+first, echo the parsed params to the user immediately, and then hand the
+pre-parsed params to the pipeline — avoiding a duplicate interpret() call
+and ensuring "INTERPRETED AS" prints BEFORE the slow blueprint LLM call.
+run() is preserved unchanged for any callers that pass raw text directly.
 """
 
 from __future__ import annotations
@@ -52,7 +58,13 @@ class FraudDataPipeline:
         self.bp_validator = BlueprintValidatorAgent()
         os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+    # ─── Public entry points ──────────────────────────────────────────────────
+
     def run(self, raw_input: str) -> PipelineResult:
+        """
+        Original entry point — interprets raw text then runs the full pipeline.
+        Preserved unchanged so any existing callers continue to work.
+        """
         start = time.time()
         result = PipelineResult(success=False)
 
@@ -64,6 +76,47 @@ class FraudDataPipeline:
             result.scenario_params = scenario_params
             logger.info("Scenario: %s", json.dumps(scenario_params, indent=2))
 
+            # ── Steps 2-5: delegate to run_from_params ────────────────────────
+            inner = self._run_pipeline(scenario_params)
+            # Merge inner result fields into result, preserving start time
+            result.blueprint        = inner.blueprint
+            result.output_path      = inner.output_path
+            result.error            = inner.error
+            result.rows_generated   = inner.rows_generated
+            result.fraud_rows       = inner.fraud_rows
+            result.success          = inner.success
+
+        except Exception as exc:
+            result.error = str(exc)
+            logger.error("❌ Pipeline FAILED: %s", exc, exc_info=True)
+
+        result.duration_seconds = time.time() - start
+        return result
+
+    def run_from_params(self, scenario_params: Dict[str, Any]) -> PipelineResult:
+        """
+        NEW (v3) — accepts already-interpreted scenario params and runs
+        steps 2-5 (blueprint generation, validation, dataset generation, save).
+
+        Called by main.py when the caller has already run interpreter.interpret()
+        and printed the params to the user — this avoids a second interpret() call
+        and ensures the console echo happens before the slow LLM blueprint call.
+        """
+        start  = time.time()
+        result = self._run_pipeline(scenario_params)
+        result.duration_seconds = time.time() - start
+        return result
+
+    # ─── Core pipeline (steps 2-5) ────────────────────────────────────────────
+
+    def _run_pipeline(self, scenario_params: Dict[str, Any]) -> PipelineResult:
+        """
+        Steps 2-5: blueprint generation + validation, dataset generation, save.
+        Returns a PipelineResult (duration_seconds not yet set by this method).
+        """
+        result = PipelineResult(success=False, scenario_params=scenario_params)
+
+        try:
             # ── Step 2 + 3: Generate & validate blueprint ─────────────────────
             logger.info("═" * 60)
             logger.info("STEP 2 ▸ Generating blueprint")
@@ -83,16 +136,14 @@ class FraudDataPipeline:
             fmt = scenario_params.get("output_format", "csv")
             save_dataset(df, output_path, fmt)
 
-            result.output_path   = output_path
-            result.rows_generated= len(df)
-            result.fraud_rows    = int(df["fraud_label"].sum())
-            result.success       = True
-            result.duration_seconds = time.time() - start
+            result.output_path    = output_path
+            result.rows_generated = len(df)
+            result.fraud_rows     = int(df["fraud_label"].sum())
+            result.success        = True
 
             logger.info("═" * 60)
             logger.info(
-                "✅ Pipeline COMPLETE in %.1fs | rows=%d fraud=%d (%.1f%%) | output=%s",
-                result.duration_seconds,
+                "✅ Pipeline COMPLETE | rows=%d fraud=%d (%.1f%%) | output=%s",
                 result.rows_generated,
                 result.fraud_rows,
                 100 * result.fraud_rows / max(result.rows_generated, 1),
@@ -101,7 +152,6 @@ class FraudDataPipeline:
 
         except Exception as exc:
             result.error = str(exc)
-            result.duration_seconds = time.time() - start
             logger.error("❌ Pipeline FAILED: %s", exc, exc_info=True)
 
         return result

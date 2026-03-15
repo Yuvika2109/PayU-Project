@@ -1,5 +1,5 @@
 """
-main.py  (v2)
+main.py  (v3)
 Entry point for the Agentic Synthetic Fraud Dataset Generator.
 
 Usage
@@ -22,6 +22,8 @@ _ROOT = Path(__file__).parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+# NEW (v3): import interpreter separately so we can call it before the pipeline
+from agents.scenario_interpreter import ScenarioInterpreterAgent
 from core.pipeline import FraudDataPipeline
 from utils.logger import get_logger
 
@@ -56,17 +58,28 @@ DEMO_SCENARIOS = {
 
 BANNER = """
 ╔══════════════════════════════════════════════════════════════════╗
-║   Agentic Synthetic Fraud Dataset Generator  v2.0               ║
+║   Agentic Synthetic Fraud Dataset Generator  v3.0               ║
 ║   LLM → Quantitative Blueprint → Static Engine → Dataset        ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
 
 INTERACTIVE_HELP = """
-Enter your fraud scenario (labelled or inline format):
+Describe your fraud scenario in any of these formats:
 
-  Labelled:                        Inline:
-  ─────────────────────────────    ──────────────────────────────────
-  Fraud Scenario: Money Launder    Money Laundering, 5000, 33%, csv
+  ① Plain English (just say what you want):
+  ─────────────────────────────────────────────────────────────────
+  "Generate a BIN attack dataset with 50,000 transactions,
+   about 5% fraud. Save as CSV."
+
+  "I need money laundering data — 10k rows, one-third fraud
+   ratio, output in parquet."
+
+  "Create card testing fraud data. 20 thousand transactions,
+   8 percent fraud, JSON output please."
+
+  ② Labelled format:                  ③ Inline shorthand:
+  ─────────────────────────────────   ─────────────────────────────
+  Fraud Scenario: Money Laundering    Money Laundering, 5000, 33%, csv
   Rows: 5000
   Fraud Ratio: 33%
   Output Format: CSV
@@ -96,9 +109,28 @@ def _print_result(result) -> None:
         print(sep)
 
 
+# NEW (v3): echoes parsed params to the user BEFORE the slow blueprint LLM call
+def _print_interpreted(params: dict) -> None:
+    """Echo back what the interpreter extracted so the user can confirm."""
+    sep = "─" * 62
+    print(f"\n{sep}")
+    print("🔍  INTERPRETED AS")
+    print(sep)
+    print(f"  Scenario      : {params.get('scenario_name', '—')}")
+    print(f"  Fraud type    : {params.get('fraud_type', '—')}")
+    print(f"  Total rows    : {params.get('rows', 0):,}")
+    print(f"  Fraud ratio   : {params.get('fraud_ratio', 0) * 100:.1f}%")
+    print(f"  Output format : {params.get('output_format', '—').upper()}")
+    print(sep)
+    print("  Generating blueprint…\n")
+
+
 def run_interactive() -> None:
     print(BANNER)
     print(INTERACTIVE_HELP)
+
+    # NEW (v3): one interpreter instance reused across the whole session
+    interpreter = ScenarioInterpreterAgent()
 
     while True:
         try:
@@ -127,7 +159,15 @@ def run_interactive() -> None:
                 continue
 
             print()
-            result = FraudDataPipeline().run(raw)
+
+            # NEW (v3): interpret first → show params immediately → then run pipeline
+            # This means the user sees "INTERPRETED AS" BEFORE the slow LLM call,
+            # not after it (old behaviour printed it after pipeline returned).
+            scenario_params = interpreter.interpret(raw)
+            _print_interpreted(scenario_params)
+
+            # run_from_params skips re-interpretation inside the pipeline
+            result = FraudDataPipeline().run_from_params(scenario_params)
             _print_result(result)
 
             if result.blueprint:
@@ -144,7 +184,11 @@ def run_interactive() -> None:
 
 
 def run_cli(scenario: str) -> int:
-    result = FraudDataPipeline().run(scenario)
+    # NEW (v3): interpret → show params → run, same pattern as interactive
+    interpreter = ScenarioInterpreterAgent()
+    scenario_params = interpreter.interpret(scenario)
+    _print_interpreted(scenario_params)
+    result = FraudDataPipeline().run_from_params(scenario_params)
     _print_result(result)
     return 0 if result.success else 1
 
@@ -178,18 +222,21 @@ def run_from_blueprint(blueprint_path: str) -> int:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Agentic Synthetic Fraud Dataset Generator v2",
+        description="Agentic Synthetic Fraud Dataset Generator v3",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent("""\
             Examples:
               python main.py
               python main.py --demo money_laundering
               python main.py --scenario "BIN Attack, 100000, 5%, csv"
+              python main.py --scenario "Generate a money laundering dataset, 10k rows, 33% fraud, parquet"
               python main.py --blueprint output/synthetic_datasets/bin_attack_blueprint.json
         """),
     )
-    parser.add_argument("--scenario",  type=str, help="Inline scenario string")
-    parser.add_argument("--blueprint", type=str, help="Path to existing blueprint JSON")
+    parser.add_argument("--scenario",  type=str,
+                        help="Scenario string — plain English, labelled, or inline")
+    parser.add_argument("--blueprint", type=str,
+                        help="Path to existing blueprint JSON (skips LLM)")
     parser.add_argument(
         "--demo", nargs="?", const="bin_attack",
         choices=list(DEMO_SCENARIOS.keys()),

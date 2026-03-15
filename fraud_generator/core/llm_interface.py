@@ -1,7 +1,18 @@
 """
-core/llm_interface.py
-Unified LLM interface supporting Ollama (Llama2, Qwen2.5-Coder) and any
+core/llm_interface.py  (v3)
+Unified LLM interface supporting Ollama (Llama3, Qwen2.5-Coder) and any
 OpenAI-compatible endpoint.  All calls go through `generate_response()`.
+
+v3 change: fixed Ollama timeout
+---------------------------------
+The blueprint prompt is ~7800 chars.  On modest hardware llama3 can take
+8–12 minutes to generate the full JSON response.  Two fixes applied:
+
+  1. timeout raised from 300 s → OLLAMA_REQUEST_TIMEOUT (default 900 s, ~15 min)
+  2. num_ctx capped at OLLAMA_NUM_CTX (default 4096) so Ollama doesn't allocate
+     a huge KV-cache that dramatically slows time-to-first-token.
+
+Both values are env-var overridable in .env / environment.
 """
 
 from __future__ import annotations
@@ -19,6 +30,8 @@ from config.model_config import (
     LLM_MAX_TOKENS,
     LLM_TEMPERATURE,
     OLLAMA_BASE_URL,
+    OLLAMA_NUM_CTX,           # NEW (v3)
+    OLLAMA_REQUEST_TIMEOUT,   # NEW (v3)
     PRIMARY_MODEL,
 )
 from utils.logger import get_logger
@@ -100,7 +113,7 @@ def generate_response(
 
 def generate_code_response(prompt: str, **kwargs) -> str:
     """Convenience wrapper that uses CODE_MODEL by default.
-    
+
     Callers may override the model by passing model_key as a keyword argument.
     If model_key is already in kwargs (e.g. from CodeGeneratorAgent), it takes
     precedence over the default CODE_MODEL.
@@ -114,19 +127,30 @@ def generate_code_response(prompt: str, **kwargs) -> str:
 def _call_ollama(
     prompt: str, model: str, temperature: float, max_tokens: int
 ) -> str:
-    """Call a local Ollama instance via its REST API."""
+    """
+    Call a local Ollama instance via its REST API.
+
+    v3 changes vs original
+    ----------------------
+    timeout : raised from hard-coded 300 s to OLLAMA_REQUEST_TIMEOUT (900 s default).
+              The blueprint prompt (~7800 chars) can take 8-12 min on a mid-range GPU.
+    num_ctx : capped at OLLAMA_NUM_CTX (4096 default).  Without this, Ollama may
+              allocate a 32k+ KV-cache, dramatically increasing time-to-first-token.
+              Raise to 8192 in .env only if you see blueprint JSON getting cut off.
+    """
     url = f"{OLLAMA_BASE_URL}/api/generate"
     payload = {
-        "model": model,
+        "model":  model,
         "prompt": prompt,
         "stream": False,
         "options": {
             "temperature": temperature,
             "num_predict": max_tokens,
+            "num_ctx":     OLLAMA_NUM_CTX,    # NEW (v3): cap context window
         },
     }
 
-    resp = requests.post(url, json=payload, timeout=300)
+    resp = requests.post(url, json=payload, timeout=OLLAMA_REQUEST_TIMEOUT)  # raised (v3)
     resp.raise_for_status()
     data = resp.json()
 
@@ -146,21 +170,22 @@ def _call_openai_compatible(
     import os
 
     base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
-    api_key = os.getenv("OPENAI_API_KEY", "")
+    api_key  = os.getenv("OPENAI_API_KEY", "")
 
     url = f"{base_url}/chat/completions"
     headers = {
-        "Content-Type": "application/json",
+        "Content-Type":  "application/json",
         "Authorization": f"Bearer {api_key}",
     }
     payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "model":       model,
+        "messages":    [{"role": "user", "content": prompt}],
         "temperature": temperature,
-        "max_tokens": max_tokens,
+        "max_tokens":  max_tokens,
     }
 
-    resp = requests.post(url, headers=headers, json=payload, timeout=300)
+    resp = requests.post(url, headers=headers, json=payload,
+                         timeout=OLLAMA_REQUEST_TIMEOUT)   # raised (v3)
     resp.raise_for_status()
     data = resp.json()
     return data["choices"][0]["message"]["content"].strip()
