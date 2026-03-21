@@ -290,3 +290,292 @@ RuntimeError: Blueprint generation failed after 3 attempts: LLM call failed afte
 2026-03-15 11:55:39 | core.pipeline                | WARNING  | Blueprint invalid (1 errors) – requesting LLM fix
 2026-03-15 11:55:39 | agents.blueprint_generator   | INFO     | Requesting LLM blueprint fix for 1 error(s)
 2026-03-15 11:55:39 | core.llm_interface           | INFO     | LLM call | model=llama3 | prompt_len=5779 chars
+2026-03-15 14:28:39 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (135 chars)
+2026-03-15 14:28:39 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-15 14:28:39 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1274 chars
+2026-03-15 14:28:41 | core.llm_interface           | WARNING  | LLM call failed (attempt 1/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 2.0s
+2026-03-15 14:28:46 | core.llm_interface           | WARNING  | LLM call failed (attempt 2/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 4.0s
+2026-03-15 14:28:52 | core.llm_interface           | WARNING  | LLM call failed (attempt 3/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 8.0s
+2026-03-15 14:29:00 | agents.scenario_interpreter  | WARNING  | NLP extractor failed (LLM call failed after 3 attempts: 404 Client Error: Not Found for url: http://localhost:11434/api/generate) — regex fallback will run.
+2026-03-15 14:29:00 | agents.scenario_interpreter  | WARNING  | Row count missing or invalid – defaulting to 10,000
+2026-03-15 14:29:00 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Money Laundering'  rows=10000  ratio=33.00%  format=csv
+2026-03-15 14:29:00 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Money Laundering
+2026-03-15 14:29:00 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-15 14:29:00 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7828 chars
+2026-03-15 14:29:02 | core.llm_interface           | WARNING  | LLM call failed (attempt 1/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 2.0s
+2026-03-15 14:29:06 | core.llm_interface           | WARNING  | LLM call failed (attempt 2/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 4.0s
+2026-03-15 14:29:12 | core.llm_interface           | WARNING  | LLM call failed (attempt 3/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 8.0s
+2026-03-15 14:29:20 | agents.blueprint_generator   | ERROR    | Attempt 1 failed: LLM call failed after 3 attempts: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2026-03-15 14:29:20 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 2/3
+2026-03-15 14:29:20 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7828 chars
+2026-03-15 14:29:22 | core.llm_interface           | WARNING  | LLM call failed (attempt 1/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 2.0s
+2026-03-15 14:29:27 | core.llm_interface           | WARNING  | LLM call failed (attempt 2/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 4.0s
+2026-03-15 14:29:33 | core.llm_interface           | WARNING  | LLM call failed (attempt 3/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 8.0s
+2026-03-15 14:29:41 | agents.blueprint_generator   | ERROR    | Attempt 2 failed: LLM call failed after 3 attempts: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2026-03-15 14:29:41 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 3/3
+2026-03-15 14:29:41 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7828 chars
+2026-03-15 14:29:43 | core.llm_interface           | WARNING  | LLM call failed (attempt 1/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 2.0s
+2026-03-15 14:29:47 | core.llm_interface           | WARNING  | LLM call failed (attempt 2/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 4.0s
+2026-03-15 14:29:53 | core.llm_interface           | WARNING  | LLM call failed (attempt 3/3): 404 Client Error: Not Found for url: http://localhost:11434/api/generate – retrying in 8.0s
+2026-03-15 14:30:01 | agents.blueprint_generator   | ERROR    | Attempt 3 failed: LLM call failed after 3 attempts: 404 Client Error: Not Found for url: http://localhost:11434/api/generate
+2026-03-15 14:32:11 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (281 chars)
+2026-03-15 14:32:11 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-15 14:32:11 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1420 chars
+2026-03-15 14:33:21 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Money Laundering', 'rows': 6000, 'fraud_ratio': 0.33, 'output_format': 'csv'}
+2026-03-15 14:33:21 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Money Laundering'  rows=6000  ratio=33.00%  format=csv
+2026-03-15 14:33:21 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Money Laundering
+2026-03-15 14:33:21 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-15 14:33:21 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7826 chars
+2026-03-15 14:44:57 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-16 21:46:02 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (92 chars)
+2026-03-16 21:46:03 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-16 21:46:03 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1231 chars
+2026-03-16 21:47:03 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 10, 'fraud_ratio': 0.3, 'output_format': 'csv'}
+2026-03-16 21:47:03 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=10  ratio=30.00%  format=csv
+2026-03-16 21:47:03 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-16 21:47:03 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-16 21:47:03 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7812 chars
+2026-03-16 21:58:13 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-16 22:07:07 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (92 chars)
+2026-03-16 22:07:07 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-16 22:07:07 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1231 chars
+2026-03-16 22:08:02 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 12, 'fraud_ratio': 0.3, 'output_format': 'csv'}
+2026-03-16 22:08:02 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=12  ratio=30.00%  format=csv
+2026-03-16 22:08:02 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-16 22:08:02 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-16 22:08:02 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7812 chars
+2026-03-16 22:12:53 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (120 chars)
+2026-03-16 22:12:53 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-16 22:12:53 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1259 chars
+2026-03-16 22:13:43 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 20, 'fraud_ratio': 0.3, 'output_format': 'csv'}
+2026-03-16 22:13:43 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=20  ratio=30.00%  format=csv
+2026-03-16 22:13:43 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-16 22:13:43 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-16 22:13:43 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7813 chars
+2026-03-16 22:25:10 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-16 23:21:53 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (91 chars)
+2026-03-16 23:21:53 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-16 23:21:53 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1230 chars
+2026-03-16 23:22:54 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 20, 'fraud_ratio': 0.2, 'output_format': 'csv'}
+2026-03-16 23:22:54 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=20  ratio=20.00%  format=csv
+2026-03-16 23:22:54 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-16 23:22:54 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-16 23:22:54 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=4668 chars
+2026-03-16 23:30:58 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-16 23:56:43 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (97 chars)
+2026-03-16 23:56:43 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-16 23:56:43 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1236 chars
+2026-03-16 23:57:53 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 20, 'fraud_ratio': 0.2, 'output_format': 'csv'}
+2026-03-16 23:57:53 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=20  ratio=20.00%  format=csv
+2026-03-16 23:57:53 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-16 23:57:53 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-16 23:57:53 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=4668 chars
+2026-03-17 00:03:46 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-17 00:10:35 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (103 chars)
+2026-03-17 00:10:35 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-17 00:10:35 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1242 chars
+2026-03-17 00:11:17 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Account Takeover', 'rows': 20, 'fraud_ratio': 0.2, 'output_format': 'csv'}
+2026-03-17 00:11:17 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Account Takeover'  rows=20  ratio=20.00%  format=csv
+2026-03-17 00:11:17 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Account Takeover
+2026-03-17 00:11:17 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-17 00:11:17 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=4668 chars
+2026-03-17 00:17:53 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-17 00:37:11 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (98 chars)
+2026-03-17 00:37:11 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-17 00:37:11 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1193 chars
+2026-03-17 00:37:57 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 20, 'fraud_ratio': 0.4, 'output_format': 'csv'}
+2026-03-17 00:37:57 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=20  ratio=40.00%  format=csv
+2026-03-17 00:37:57 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-17 00:37:57 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-17 00:37:57 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7502 chars
+2026-03-17 00:44:44 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-17 00:52:25 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (98 chars)
+2026-03-17 00:52:25 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-17 00:52:25 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1193 chars
+2026-03-17 00:53:26 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 20, 'fraud_ratio': 0.4, 'output_format': 'csv'}
+2026-03-17 00:53:26 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=20  ratio=40.00%  format=csv
+2026-03-17 00:53:26 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-17 00:53:26 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-17 00:53:26 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7502 chars
+2026-03-17 01:02:40 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-17 01:09:21 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (98 chars)
+2026-03-17 01:09:21 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-17 01:09:21 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1193 chars
+2026-03-17 01:10:26 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 20, 'fraud_ratio': 0.4, 'output_format': 'csv'}
+2026-03-17 01:10:26 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=20  ratio=40.00%  format=csv
+2026-03-17 01:10:26 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-17 01:10:26 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-17 01:10:26 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7502 chars
+2026-03-17 01:19:23 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-17 11:54:46 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (104 chars)
+2026-03-17 11:54:46 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-17 11:54:46 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1199 chars
+2026-03-17 11:55:53 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 20, 'fraud_ratio': 0.4, 'output_format': 'csv'}
+2026-03-17 11:55:53 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=20  ratio=40.00%  format=csv
+2026-03-17 11:55:53 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-17 11:55:53 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-17 11:55:53 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7502 chars
+2026-03-17 12:05:52 | agents.blueprint_generator   | WARNING  | LLM wrote fraud_ratio=40.0 — overriding with user value 0.4000
+2026-03-17 12:05:52 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-17 12:07:55 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (136 chars)
+2026-03-17 12:07:55 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-17 12:07:55 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1231 chars
+2026-03-17 12:08:35 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Location Change', 'rows': 20, 'fraud_ratio': 0.4, 'output_format': 'csv'}
+2026-03-17 12:08:35 | agents.scenario_interpreter  | INFO     | Unknown scenario 'Location Change' — invoking ScenarioEnricher LLM call
+2026-03-17 12:08:35 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: calling LLM for unknown scenario 'Location Change'
+2026-03-17 12:08:35 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1546 chars
+2026-03-17 12:09:24 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: inferred type='Account Fraud' description='A legitimate account holder changes their address, causing subsequent transactio...'
+2026-03-17 12:09:24 | agents.scenario_interpreter  | INFO     | ScenarioEnricher result: type='Account Fraud'  description='A legitimate account holder changes their address, causing subsequent transactio...'
+2026-03-17 12:09:24 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Location Change'  rows=20  ratio=40.00%  format=csv
+2026-03-17 12:09:24 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Location Change
+2026-03-17 12:09:24 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-17 12:09:24 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7630 chars
+2026-03-17 12:15:49 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-20 19:07:53 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (183 chars)
+2026-03-20 19:07:55 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-20 19:07:55 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1278 chars
+2026-03-20 19:09:05 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 30, 'fraud_ratio': 0.08, 'output_format': 'csv'}
+2026-03-20 19:09:07 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bin Attack'  rows=30  ratio=8.00%  format=csv
+2026-03-20 19:09:07 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-20 19:09:07 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-20 19:09:07 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7501 chars
+2026-03-20 19:16:51 | agents.blueprint_generator   | WARNING  | LLM wrote fraud_ratio=8.0 — overriding with user value 0.0800
+2026-03-20 19:16:51 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-20 19:19:32 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (228 chars)
+2026-03-20 19:19:32 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-20 19:19:32 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1323 chars
+2026-03-20 19:20:14 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Card Testing', 'rows': 20000, 'fraud_ratio': 0.05, 'output_format': 'parquet'}
+2026-03-20 19:20:14 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Card Testing'  rows=20000  ratio=5.00%  format=parquet
+2026-03-20 19:20:43 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (224 chars)
+2026-03-20 19:20:43 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-20 19:20:43 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1319 chars
+2026-03-20 19:20:52 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Card Testing', 'rows': 20, 'fraud_ratio': 0.33, 'output_format': 'parquet'}
+2026-03-20 19:20:52 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Card Testing'  rows=20  ratio=33.00%  format=parquet
+2026-03-20 19:20:52 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Card Testing
+2026-03-20 19:20:52 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-20 19:20:52 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7435 chars
+2026-03-20 19:27:59 | agents.blueprint_generator   | WARNING  | LLM wrote fraud_ratio=33.0 — overriding with user value 0.3300
+2026-03-20 19:27:59 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-20 19:32:10 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (110 chars)
+2026-03-20 19:32:10 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-20 19:32:10 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1205 chars
+2026-03-20 19:32:52 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Money Laundering', 'rows': 50, 'fraud_ratio': 0.33, 'output_format': 'json'}
+2026-03-20 19:32:52 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Money Laundering'  rows=50  ratio=33.00%  format=json
+2026-03-20 19:32:52 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Money Laundering
+2026-03-20 19:32:52 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-20 19:32:52 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7459 chars
+2026-03-20 19:40:48 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-20 19:49:33 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (201 chars)
+2026-03-20 19:49:33 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-20 19:49:33 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1296 chars
+2026-03-20 19:50:21 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Phishing', 'rows': 25, 'fraud_ratio': 0.33}
+2026-03-20 19:50:21 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Phishing'  rows=25  ratio=33.00%  format=csv
+2026-03-20 19:50:21 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Phishing
+2026-03-20 19:50:21 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-20 19:50:21 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7412 chars
+2026-03-20 19:58:23 | agents.blueprint_generator   | WARNING  | LLM wrote fraud_ratio=33.0 — overriding with user value 0.3300
+2026-03-20 19:58:23 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-20 21:34:17 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (201 chars)
+2026-03-20 21:34:17 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-20 21:34:17 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1296 chars
+2026-03-20 21:35:18 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Phishing', 'rows': 25, 'fraud_ratio': 0.33}
+2026-03-20 21:35:18 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Phishing'  rows=25  ratio=33.00%  format=csv
+2026-03-20 21:35:18 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Phishing
+2026-03-20 21:35:18 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-20 21:35:18 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7412 chars
+2026-03-20 22:09:29 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (296 chars)
+2026-03-20 22:09:30 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-20 22:09:30 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1391 chars
+2026-03-20 22:11:00 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Corporate Credit Card Abuse', 'rows': 30, 'fraud_ratio': 0.4, 'output_format': 'csv'}
+2026-03-20 22:11:00 | agents.scenario_interpreter  | INFO     | Unknown scenario 'Corporate Credit Card Abuse' — invoking ScenarioEnricher LLM call
+2026-03-20 22:11:00 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: calling LLM for unknown scenario 'Corporate Credit Card Abuse'
+2026-03-20 22:11:00 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1718 chars
+2026-03-20 22:12:26 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: inferred type='Account Fraud' description='Employee uses corporate credit card for personal luxury hotel stays and business...'
+2026-03-20 22:12:26 | agents.scenario_interpreter  | INFO     | ScenarioEnricher result: type='Account Fraud'  description='Employee uses corporate credit card for personal luxury hotel stays and business...'
+2026-03-20 22:12:26 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Corporate Credit Card Abuse'  rows=30  ratio=40.00%  format=csv
+2026-03-20 22:12:26 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Corporate Credit Card Abuse
+2026-03-20 22:12:26 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-20 22:12:26 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7711 chars
+2026-03-20 22:22:54 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-20 22:28:19 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (285 chars)
+2026-03-20 22:28:19 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-20 22:28:19 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1380 chars
+2026-03-20 22:29:28 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Loyalty Points Fraud', 'rows': 30, 'fraud_ratio': 0.3, 'output_format': 'json'}
+2026-03-20 22:29:28 | agents.scenario_interpreter  | INFO     | Unknown scenario 'Loyalty Points Fraud' — invoking ScenarioEnricher LLM call
+2026-03-20 22:29:28 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: calling LLM for unknown scenario 'Loyalty Points Fraud'
+2026-03-20 22:29:28 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1700 chars
+2026-03-20 22:30:30 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: inferred type='Loyalty Fraud' description='Fraudsters create fake accounts or hack into real ones to redeem accumulated rew...'
+2026-03-20 22:30:30 | agents.scenario_interpreter  | INFO     | ScenarioEnricher result: type='Loyalty Fraud'  description='Fraudsters create fake accounts or hack into real ones to redeem accumulated rew...'
+2026-03-20 22:30:30 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Loyalty Points Fraud'  rows=30  ratio=30.00%  format=json
+2026-03-20 22:30:30 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Loyalty Points Fraud
+2026-03-20 22:30:30 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-20 22:30:30 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7644 chars
+2026-03-20 22:40:44 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-21 12:01:41 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (249 chars)
+2026-03-21 12:01:43 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE — invoking NLP extractor
+2026-03-21 12:01:43 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1344 chars
+2026-03-21 12:02:40 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Bust-Out', 'rows': 40, 'fraud_ratio': 0.15, 'output_format': 'json'}
+2026-03-21 12:02:40 | agents.scenario_interpreter  | INFO     | Unknown scenario 'Bust-Out' — invoking ScenarioEnricher LLM call
+2026-03-21 12:02:40 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: calling LLM for unknown scenario 'Bust-Out'
+2026-03-21 12:02:40 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1652 chars
+2026-03-21 12:03:34 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: inferred type='Account Fraud' description='Fraudsters build up a good credit history by making small regular payments over ...'
+2026-03-21 12:03:34 | agents.scenario_interpreter  | INFO     | ScenarioEnricher result: type='Account Fraud'  description='Fraudsters build up a good credit history by making small regular payments over ...'
+2026-03-21 12:03:34 | agents.scenario_interpreter  | INFO     | Interpreted scenario: name='Bust-Out'  rows=40  ratio=15.00%  format=json
+2026-03-21 12:03:34 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bust-Out
+2026-03-21 12:03:34 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-21 12:03:34 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7540 chars
+2026-03-21 12:13:24 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-21 13:06:56 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (184 chars)
+2026-03-21 13:06:56 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-03-21 13:06:56 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1976 chars
+2026-03-21 13:09:11 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 30, 'fraud_ratio': 0.33, 'output_format': 'csv'}
+2026-03-21 13:09:11 | agents.scenario_interpreter  | INFO     | Matched known scenario on raw input: 'bin attack'
+2026-03-21 13:09:11 | agents.scenario_interpreter  | INFO     | Interpreted: name='Bin Attack'  rows=30  ratio=33.00%  format=csv
+2026-03-21 13:09:11 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-03-21 13:09:11 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-21 13:09:11 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=8095 chars
+2026-03-21 14:16:56 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-21 14:18:35 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (222 chars)
+2026-03-21 14:18:35 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-03-21 14:18:35 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=2014 chars
+2026-03-21 14:19:47 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Account Takeover', 'rows': 20, 'fraud_ratio': 0.5, 'output_format': 'json'}
+2026-03-21 14:19:47 | agents.scenario_interpreter  | INFO     | Matched known scenario on name: 'account takeover'
+2026-03-21 14:19:47 | agents.scenario_interpreter  | INFO     | Interpreted: name='Account Takeover'  rows=20  ratio=50.00%  format=json
+2026-03-21 14:19:47 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Account Takeover
+2026-03-21 14:19:47 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-21 14:19:47 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=8142 chars
+2026-03-21 14:29:47 | agents.blueprint_generator   | WARNING  | LLM wrote fraud_ratio=50.0 — overriding with user value 0.5000
+2026-03-21 14:29:47 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-21 14:31:13 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (299 chars)
+2026-03-21 14:31:13 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-03-21 14:31:13 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=2091 chars
+2026-03-21 14:32:29 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Corporate Card Abuse', 'rows': 30000, 'fraud_ratio': 0.04, 'output_format': 'csv'}
+2026-03-21 14:32:29 | agents.scenario_interpreter  | INFO     | Unknown scenario 'Corporate Card Abuse' — invoking ScenarioEnricher
+2026-03-21 14:32:29 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: calling LLM for 'Corporate Card Abuse'
+2026-03-21 14:32:29 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1822 chars
+2026-03-21 14:33:47 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (296 chars)
+2026-03-21 14:33:47 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-03-21 14:33:47 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=2088 chars
+2026-03-21 14:35:11 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Corporate Card Abuse', 'rows': 30, 'fraud_ratio': 0.4, 'output_format': 'csv'}
+2026-03-21 14:35:11 | agents.scenario_interpreter  | INFO     | Unknown scenario 'Corporate Card Abuse' — invoking ScenarioEnricher
+2026-03-21 14:35:11 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: calling LLM for 'Corporate Card Abuse'
+2026-03-21 14:35:11 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1819 chars
+2026-03-21 14:36:34 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: type='Corporate Card Abuse'
+2026-03-21 14:36:34 | agents.scenario_interpreter  | INFO     | ScenarioEnricher: type='Corporate Card Abuse'
+2026-03-21 14:36:34 | agents.scenario_interpreter  | INFO     | Interpreted: name='Corporate Card Abuse'  rows=30  ratio=40.00%  format=csv
+2026-03-21 14:36:34 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Corporate Card Abuse
+2026-03-21 14:36:34 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-21 14:36:34 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=8407 chars
+2026-03-21 14:46:59 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-03-21 14:51:27 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (72 chars)
+2026-03-21 14:51:27 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-03-21 14:51:27 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1864 chars
+2026-03-21 14:52:32 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Account Takeover', 'rows': 20, 'output_format': 'csv'}
+2026-03-21 14:52:32 | agents.scenario_interpreter  | WARNING  | Fraud ratio missing – defaulting to 5%%
+2026-03-21 14:52:32 | agents.scenario_interpreter  | INFO     | Matched known scenario on raw input: 'account takeover'
+2026-03-21 14:52:32 | agents.scenario_interpreter  | INFO     | Interpreted: name='Account Takeover'  rows=20  ratio=5.00%  format=csv
+2026-03-21 14:52:32 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Account Takeover
+2026-03-21 14:52:32 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-03-21 14:52:32 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7989 chars
+2026-03-21 15:02:18 | agents.blueprint_generator   | WARNING  | LLM wrote fraud_ratio=5.0 — overriding with user value 0.0500
+2026-03-21 15:02:18 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1

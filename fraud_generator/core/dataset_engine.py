@@ -47,6 +47,18 @@ def _weighted_choice(weights_dict: Dict[str, float]) -> str:
     return random.choices(keys, weights=probs, k=1)[0]
 
 
+def _sanitise_weights(weights_dict, fallback: dict) -> dict:
+    """
+    Ensure a weights dict has at least one numeric value.
+    Returns fallback if the dict is missing, empty, or has no numeric values.
+    Strips non-numeric entries so _weighted_choice never crashes.
+    """
+    if not isinstance(weights_dict, dict) or not weights_dict:
+        return fallback
+    clean = {k: v for k, v in weights_dict.items() if isinstance(v, (int, float))}
+    return clean if clean else fallback
+
+
 def _sample_amount(dist: str, mn: float, mx: float,
                    mean: float, std: float) -> float:
     """Sample a transaction amount from the configured distribution."""
@@ -61,7 +73,7 @@ def _sample_amount(dist: str, mn: float, mx: float,
         v = (np.random.pareto(b) + 1) * mn
     else:  # uniform
         v = np.random.uniform(mn, mx)
-    return round(float(_clamp(v, mn, mx)), 2)
+    return round(float(_clamp(max(0.01, v), mn, mx)), 2)
 
 
 def _sample_timestamp(start: datetime, end: datetime,
@@ -72,9 +84,8 @@ def _sample_timestamp(start: datetime, end: datetime,
     delta = (end - start).total_seconds()
     ts    = start + timedelta(seconds=random.uniform(0, delta))
 
-    # Re-roll the hour toward preferred / peak hours
     if preferred_hours:
-        if random.random() > 0.15:          # 85 % of fraud hits preferred hours
+        if random.random() > 0.15:
             ts = ts.replace(hour=random.choice(preferred_hours),
                             minute=random.randint(0, 59),
                             second=random.randint(0, 59))
@@ -82,7 +93,6 @@ def _sample_timestamp(start: datetime, end: datetime,
         hour = ts.hour
         in_peak = peak_start <= hour <= peak_end
         if not in_peak and random.random() > off_peak_weight:
-            # Shift into peak window
             ts = ts.replace(
                 hour=random.randint(peak_start, peak_end),
                 minute=random.randint(0, 59),
@@ -104,7 +114,7 @@ def _faker_or_fallback(method: str, *args, **kwargs):
 class UserProfile:
     user_id: str
     home_city: str
-    home_ip_prefix: str      # e.g. "192.168"
+    home_ip_prefix: str
     primary_device: str
     is_fraudster: bool = False
     card_numbers: List[str] = field(default_factory=list)
@@ -133,8 +143,8 @@ class UserPool:
         for i in range(n_fraud):
             self.users.append(self._make_user(f"F{i:06d}", is_fraudster=True))
 
-        self.normal_users   = [u for u in self.users if not u.is_fraudster]
-        self.fraud_users    = [u for u in self.users if     u.is_fraudster]
+        self.normal_users = [u for u in self.users if not u.is_fraudster]
+        self.fraud_users  = [u for u in self.users if     u.is_fraudster]
 
     def _make_user(self, uid: str, is_fraudster: bool) -> UserProfile:
         ip_a = random.randint(10, 220)
@@ -142,12 +152,12 @@ class UserPool:
         cards = [_faker_or_fallback("credit_card_number", card_type="visa")
                  for _ in range(random.randint(1, 3))]
         return UserProfile(
-            user_id       = uid,
-            home_city     = _faker_or_fallback("city"),
-            home_ip_prefix= f"{ip_a}.{ip_b}",
-            primary_device= str(uuid.uuid4())[:8],
-            is_fraudster  = is_fraudster,
-            card_numbers  = cards,
+            user_id        = uid,
+            home_city      = _faker_or_fallback("city"),
+            home_ip_prefix = f"{ip_a}.{ip_b}",
+            primary_device = str(uuid.uuid4())[:8],
+            is_fraudster   = is_fraudster,
+            card_numbers   = cards,
         )
 
 
@@ -163,7 +173,6 @@ class MerchantPool:
                 category    = cat,
                 city        = _faker_or_fallback("city"),
             ))
-        # Index by category for fast lookup
         self._by_category: Dict[str, List[MerchantProfile]] = {}
         for m in self.merchants:
             self._by_category.setdefault(m.category, []).append(m)
@@ -184,9 +193,9 @@ class NormalGenerator:
 
     def __init__(self, blueprint: Dict[str, Any],
                  user_pool: UserPool, merchant_pool: MerchantPool):
-        self.bp       = blueprint
-        self.users    = user_pool
-        self.merchants= merchant_pool
+        self.bp        = blueprint
+        self.users     = user_pool
+        self.merchants = merchant_pool
 
         specs = blueprint["Dataset_Specifications"]
         self.start = datetime.fromisoformat(specs["date_range_start"])
@@ -198,7 +207,7 @@ class NormalGenerator:
         self.hour_cfg = prof["active_hours"]
         self.day_cfg  = prof["active_days"]
         self.cat_w    = prof["merchant_category_weights"]
-        self.cur_w    = prof["currency_weights"]
+        self.cur_w    = _sanitise_weights(prof.get("currency_weights"), {"USD": 1.0})
         self.loc_prob = prof.get("location_change_prob", 0.05)
         self.dev_prob = prof.get("device_change_prob", 0.02)
 
@@ -206,8 +215,6 @@ class NormalGenerator:
         rows: List[Dict] = []
         users = self.users.normal_users or self.users.users
 
-        # Distribute transactions across users
-        # Each user gets a random number of transactions proportional to target_n
         per_user_txns = self._allocate(target_n, len(users))
 
         for user, n_txns in zip(users, per_user_txns):
@@ -220,15 +227,12 @@ class NormalGenerator:
         return df
 
     def _allocate(self, total: int, n_users: int) -> List[int]:
-        """Poisson-distributed allocation, normalised to sum to total."""
         lam    = max(1, total / n_users)
         counts = np.random.poisson(lam, size=n_users).tolist()
-        # Normalise so sum == total
         actual = sum(counts)
         if actual == 0:
             counts = [1] * n_users
             actual = n_users
-        # Scale and fix rounding
         scaled = [int(c * total / actual) for c in counts]
         diff   = total - sum(scaled)
         for i in range(abs(diff)):
@@ -249,37 +253,34 @@ class NormalGenerator:
             self.hour_cfg["peak_start"], self.hour_cfg["peak_end"],
             self.hour_cfg["off_peak_weight"],
         )
-        # Location: home city or occasional travel
         location = (
             _faker_or_fallback("city")
             if random.random() < self.loc_prob
             else user.home_city
         )
-        # Device: primary or occasional switch
         device_id = (
             str(uuid.uuid4())[:8]
             if random.random() < self.dev_prob
             else user.primary_device
         )
-        # IP: home prefix
-        ip = f"{user.home_ip_prefix}.{random.randint(1, 254)}.{random.randint(1, 254)}"
+        ip   = f"{user.home_ip_prefix}.{random.randint(1, 254)}.{random.randint(1, 254)}"
         card = random.choice(user.card_numbers)
 
         return {
-            "transaction_id":    str(uuid.uuid4()),
-            "timestamp":         ts,
-            "user_id":           user.user_id,
-            "card_number":       card,
-            "bin_number":        card[:6],
-            "merchant_id":       merchant.merchant_id,
-            "merchant_category": merchant.category,
+            "transaction_id":     str(uuid.uuid4()),
+            "timestamp":          ts,
+            "user_id":            user.user_id,
+            "card_number":        card,
+            "bin_number":         card[:6],
+            "merchant_id":        merchant.merchant_id,
+            "merchant_category":  merchant.category,
             "transaction_amount": amount,
-            "currency":          currency,
-            "location":          location,
-            "device_id":         device_id,
-            "ip_address":        ip,
-            "foreign_ip_flag":   0,
-            "fraud_label":       0,
+            "currency":           currency,
+            "location":           location,
+            "device_id":          device_id,
+            "ip_address":         ip,
+            "foreign_ip_flag":    0,
+            "fraud_label":        0,
         }
 
 
@@ -293,20 +294,22 @@ class FraudInjector:
 
     def __init__(self, blueprint: Dict[str, Any],
                  user_pool: UserPool, merchant_pool: MerchantPool):
-        self.bp       = blueprint
-        self.users    = user_pool
-        self.merchants= merchant_pool
+        self.bp        = blueprint
+        self.users     = user_pool
+        self.merchants = merchant_pool
 
         specs      = blueprint["Dataset_Specifications"]
         self.start = datetime.fromisoformat(specs["date_range_start"])
         self.end   = datetime.fromisoformat(specs["date_range_end"])
 
-        self.patterns   = blueprint["Fraud_Patterns"]
-        self.inj_rules  = blueprint["Fraud_Injection_Rules"]
-        self.seq_rules  = blueprint["Sequence_Rules"]
-        self.cur_w      = blueprint["Normal_User_Profile"]["currency_weights"]
+        self.patterns  = blueprint["Fraud_Patterns"]
+        self.inj_rules = blueprint["Fraud_Injection_Rules"]
+        self.seq_rules = blueprint["Sequence_Rules"]
+        self.cur_w     = _sanitise_weights(
+            blueprint["Normal_User_Profile"].get("currency_weights"),
+            {"USD": 1.0},
+        )
 
-        # Build weighted pattern selector
         total_w = sum(p["weight"] for p in self.patterns)
         self._pattern_weights = [p["weight"] / total_w for p in self.patterns]
 
@@ -316,11 +319,9 @@ class FraudInjector:
 
         fraud_users = self.users.fraud_users
         if not fraud_users:
-            # Fall back: pick random normal users as "contaminated"
             fraud_users = random.sample(self.users.users,
                                         max(1, len(self.users.users) // 10))
 
-        # Generate batches until we hit target_n
         attempts = 0
         while len(rows) < target_n and attempts < target_n * 3:
             attempts += 1
@@ -352,27 +353,22 @@ class FraudInjector:
     def _burst(self, user: UserProfile, pattern: Dict,
                params: Dict, max_txns: int) -> List[Dict]:
         """Many transactions in a short time window against few merchants."""
-        n = random.randint(
-            params.get("burst_min_txns", 5),
-            min(params.get("burst_max_txns", 20), max_txns),
-        )
+        _bmn = params.get("burst_min_txns", 5)
+        _bmx = max(_bmn, min(params.get("burst_max_txns", 20), max_txns))
+        n = random.randint(_bmn, _bmx)
         window_mins = params.get("burst_window_mins", 30)
 
-        # Anchor timestamp
         anchor = _sample_timestamp(
             self.start, self.end, 0, 23, 0.1,
             params.get("preferred_hours"),
         )
 
-        # Pick merchant(s) — reuse in burst
-        n_merchants = params.get("num_merchants", 1)
+        n_merchants = max(1, params.get("num_merchants", 1))
         merchants   = self.merchants.random_merchant(n=n_merchants)
 
         rows = []
         for i in range(n):
-            offset_secs = random.uniform(
-                0, window_mins * 60
-            )
+            offset_secs = random.uniform(0, max(1, window_mins * 60))
             ts = anchor + timedelta(seconds=offset_secs)
             m  = random.choice(merchants)
             rows.append(self._build_row(user, pattern, params, ts, m))
@@ -381,31 +377,29 @@ class FraudInjector:
     def _chain(self, user: UserProfile, pattern: Dict,
                params: Dict, max_txns: int) -> List[Dict]:
         """Sequential escalating transactions — each follows the last."""
-        n = random.randint(
-            params.get("burst_min_txns", 3),
-            min(params.get("burst_max_txns", 8), max_txns),
-        )
+        _cmn = params.get("burst_min_txns", 3)
+        _cmx = max(_cmn, min(params.get("burst_max_txns", 8), max_txns))
+        n = random.randint(_cmn, _cmx)
         gap_min = self.seq_rules.get("inter_txn_gap_seconds", {}).get("min", 30)
         gap_max = self.seq_rules.get("inter_txn_gap_seconds", {}).get("max", 300)
+        gap_min = min(gap_min, gap_max)
 
-        ts_cur  = _sample_timestamp(
+        ts_cur = _sample_timestamp(
             self.start, self.end, 0, 23, 0.1,
             params.get("preferred_hours"),
         )
-        n_merchants = params.get("num_merchants", 3)
+        n_merchants = max(1, params.get("num_merchants", 3))
         merchants   = self.merchants.random_merchant(n=n_merchants)
 
         rows = []
-        # Escalate amounts across the chain
-        a_min = params.get("amount_min", 1.0)
+        a_min = max(0.01, params.get("amount_min", 1.0))
         a_max = params.get("amount_max", 500.0)
         for i in range(n):
-            # Amount escalates linearly along the chain
             frac   = i / max(n - 1, 1)
             a_mean = a_min + frac * (a_max - a_min)
             a_std  = params.get("amount_std", (a_max - a_min) * 0.1)
             amount = round(float(_clamp(
-                np.random.normal(a_mean, a_std), a_min, a_max
+                max(0.01, np.random.normal(a_mean, a_std)), a_min, a_max
             )), 2)
 
             m = random.choice(merchants)
@@ -417,14 +411,10 @@ class FraudInjector:
 
     def _network(self, user: UserProfile, pattern: Dict,
                  params: Dict, max_txns: int) -> List[Dict]:
-        """
-        Multi-account / smurfing: same pattern spread across N accounts,
-        each contributing a small number of transactions.
-        """
-        n_accounts  = params.get("num_accounts", 5)
-        n_merchants = params.get("num_merchants", 3)
+        """Multi-account / smurfing pattern."""
+        n_accounts  = max(1, params.get("num_accounts", 5))
+        n_merchants = max(1, params.get("num_merchants", 3))
 
-        # Borrow or create synthetic account user-ids
         smurf_users = [
             UserProfile(
                 user_id        = f"SMURF_{user.user_id}_{i}",
@@ -466,22 +456,19 @@ class FraudInjector:
     def _build_row(self, user: UserProfile, pattern: Dict, params: Dict,
                    ts: datetime, merchant: MerchantProfile,
                    amount_override: Optional[float] = None) -> Dict:
-        # Amount
         if amount_override is not None:
-            amount = amount_override
+            amount = max(0.01, amount_override)
         else:
             amount = _sample_amount(
                 "uniform",
-                params.get("amount_min", 1.0),
+                max(0.01, params.get("amount_min", 1.0)),
                 params.get("amount_max", 500.0),
                 params.get("amount_mean", 50.0),
                 params.get("amount_std", 30.0),
             )
-            # Round amount fraud signal
             if random.random() < params.get("round_amount_prob", 0.0):
-                amount = float(round(amount / 10) * 10)
+                amount = max(0.01, float(round(amount / 10) * 10))
 
-        # IP — foreign or home
         if random.random() < params.get("foreign_ip_prob", 0.5):
             ip         = f"{random.randint(1,223)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(1,254)}"
             foreign_ip = 1
@@ -489,19 +476,16 @@ class FraudInjector:
             ip         = f"{user.home_ip_prefix}.{random.randint(1,254)}.{random.randint(1,254)}"
             foreign_ip = 0
 
-        # Device — reuse or new
         if random.random() < params.get("same_device_prob", 0.5):
             device_id = user.primary_device
         else:
             device_id = str(uuid.uuid4())[:8]
 
-        # Location
         if random.random() < params.get("same_location_prob", 0.3):
             location = user.home_city
         else:
             location = _faker_or_fallback("city")
 
-        # Card
         card = random.choice(user.card_numbers)
 
         return {
@@ -537,40 +521,33 @@ class DatasetEngine:
         np.random.seed(seed)
 
     def generate(self) -> pd.DataFrame:
-        """
-        Generate and return the full synthetic dataset as a DataFrame.
-        """
-        specs        = self.bp["Dataset_Specifications"]
-        total_rows   = specs["total_rows"]
-        fraud_ratio  = specs["fraud_ratio"]
-        num_users    = specs["num_users"]
-        num_merchants= specs["num_merchants"]
-        inj_rules    = self.bp["Fraud_Injection_Rules"]
+        specs         = self.bp["Dataset_Specifications"]
+        total_rows    = specs["total_rows"]
+        fraud_ratio   = specs["fraud_ratio"]
+        num_users     = specs["num_users"]
+        num_merchants = specs["num_merchants"]
+        inj_rules     = self.bp["Fraud_Injection_Rules"]
 
         n_fraud  = int(total_rows * fraud_ratio)
         n_normal = total_rows - n_fraud
 
-        # ── Build pools ───────────────────────────────────────────────────────
         user_pool = UserPool(
             num_users        = num_users,
             fraud_user_ratio = inj_rules["fraud_user_ratio"],
             seed             = self.seed,
         )
         merchant_pool = MerchantPool(
-            num_merchants     = num_merchants,
-            category_weights  = self.bp["Normal_User_Profile"]["merchant_category_weights"],
-            seed              = self.seed,
+            num_merchants    = num_merchants,
+            category_weights = self.bp["Normal_User_Profile"]["merchant_category_weights"],
+            seed             = self.seed,
         )
 
-        # ── Generate normal transactions ──────────────────────────────────────
         normal_gen = NormalGenerator(self.bp, user_pool, merchant_pool)
         normal_df  = normal_gen.generate(n_normal)
 
-        # ── Generate fraud transactions ───────────────────────────────────────
         fraud_inj = FraudInjector(self.bp, user_pool, merchant_pool)
         fraud_df  = fraud_inj.generate(n_fraud)
 
-        # ── Optionally contaminate normal users ───────────────────────────────
         if inj_rules.get("contaminate_normal_users") and inj_rules.get("contamination_prob", 0) > 0:
             contamination_rows = self._contaminate(
                 normal_df, fraud_inj,
@@ -578,15 +555,10 @@ class DatasetEngine:
             )
             fraud_df = pd.concat([fraud_df, contamination_rows], ignore_index=True)
 
-        # ── Combine, shuffle, sort by timestamp ──────────────────────────────
         df = pd.concat([normal_df, fraud_df], ignore_index=True)
         df = df.sample(frac=1, random_state=self.seed).reset_index(drop=True)
         df = df.sort_values("timestamp").reset_index(drop=True)
-
-        # ── Ensure correct row count ──────────────────────────────────────────
         df = df.head(total_rows)
-
-        # ── Post-processing ───────────────────────────────────────────────────
         df = self._add_derived_columns(df)
         df = self._enforce_types(df)
 
@@ -595,11 +567,9 @@ class DatasetEngine:
     def _contaminate(self, normal_df: pd.DataFrame,
                      fraud_inj: FraudInjector,
                      prob: float) -> pd.DataFrame:
-        """Convert some normal users' transactions into fraud."""
         contaminated: List[Dict] = []
         for uid in normal_df["user_id"].unique():
             if random.random() < prob:
-                # Replace a random txn for this user with a fraud one
                 pattern = random.choice(self.bp["Fraud_Patterns"])
                 user    = UserProfile(
                     user_id        = uid,
@@ -614,16 +584,14 @@ class DatasetEngine:
         return pd.DataFrame(contaminated)
 
     def _add_derived_columns(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Add analyst-friendly derived columns."""
         df = df.copy()
-        df["hour_of_day"]      = pd.to_datetime(df["timestamp"]).dt.hour
-        df["day_of_week"]      = pd.to_datetime(df["timestamp"]).dt.dayofweek
-        df["is_weekend"]       = df["day_of_week"].isin([5, 6]).astype(int)
-        df["amount_log"]       = np.log1p(df["transaction_amount"])
+        df["hour_of_day"] = pd.to_datetime(df["timestamp"]).dt.hour
+        df["day_of_week"] = pd.to_datetime(df["timestamp"]).dt.dayofweek
+        df["is_weekend"]  = df["day_of_week"].isin([5, 6]).astype(int)
+        df["amount_log"]  = np.log1p(df["transaction_amount"])
         return df
 
     def _enforce_types(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Ensure correct dtypes for all columns."""
         df["timestamp"]          = pd.to_datetime(df["timestamp"])
         df["transaction_amount"] = df["transaction_amount"].astype(float).round(2)
         df["fraud_label"]        = df["fraud_label"].astype(int)

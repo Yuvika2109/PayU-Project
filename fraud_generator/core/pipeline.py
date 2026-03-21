@@ -8,6 +8,12 @@ first, echo the parsed params to the user immediately, and then hand the
 pre-parsed params to the pipeline — avoiding a duplicate interpret() call
 and ensuring "INTERPRETED AS" prints BEFORE the slow blueprint LLM call.
 run() is preserved unchanged for any callers that pass raw text directly.
+
+v3 fix (rows/ratio): _generate_and_validate_blueprint() now passes
+scenario_params to bp_generator.fix() so _enforce_user_values() re-runs
+after every fix round — prevents the LLM from resetting user's rows/ratio
+values during the validation loop.
+Change: one argument added to the existing fix() call on line ~114.
 """
 
 from __future__ import annotations
@@ -174,7 +180,8 @@ class FraudDataPipeline:
             logger.warning(
                 "Blueprint invalid (%d errors) – requesting LLM fix", len(errors)
             )
-            blueprint = self.bp_generator.fix(blueprint, errors)
+            # Pass scenario_params so _enforce_user_values re-runs after fix ←v3 fix
+            blueprint = self.bp_generator.fix(blueprint, errors, scenario_params)
 
         is_valid, errors = self.bp_validator.validate(blueprint)
         if not is_valid:

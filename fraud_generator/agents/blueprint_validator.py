@@ -1,6 +1,12 @@
 """
-agents/blueprint_validator.py  (v2)
+agents/blueprint_validator.py  (v4)
 Validates a v2 Fraud Blueprint — checks quantitative fields specifically.
+
+v3 fix: added currency_weights validation to _check_normal_profile().
+v4 fix: added amount floor checks — amount_min >= 0.01 for Normal_User_Profile
+  and every Fraud_Patterns[*].params entry. Zero and negative transaction
+  amounts are never valid and cause DatasetEngine to produce bad data.
+  Also checks amount_mean is between amount_min and amount_max per pattern.
 """
 
 from __future__ import annotations
@@ -103,7 +109,7 @@ class BlueprintValidatorAgent:
             if f not in prof:
                 errors.append(f"Normal_User_Profile missing: '{f}'")
 
-        # transaction_amount must have numeric sub-fields
+        # transaction_amount sub-fields
         ta = prof.get("transaction_amount", {})
         if isinstance(ta, dict):
             for sub in ("min", "max", "mean", "std"):
@@ -121,8 +127,15 @@ class BlueprintValidatorAgent:
                     f"Normal_User_Profile.transaction_amount.distribution must be one of "
                     f"normal/lognormal/uniform/pareto, got: {ta['distribution']!r}"
                 )
+            # ── Amount floor check (v4) ────────────────────────────────────
+            mn = ta.get("min")
+            if isinstance(mn, (int, float)) and mn < 0.01:
+                errors.append(
+                    f"Normal_User_Profile.transaction_amount.min must be >= 0.01 "
+                    f"(zero/negative amounts are invalid), got: {mn}"
+                )
 
-        # merchant_category_weights must have at least one numeric value
+        # merchant_category_weights
         mcw = prof.get("merchant_category_weights", {})
         if isinstance(mcw, dict):
             non_numeric = [k for k, v in mcw.items() if not isinstance(v, (int, float))]
@@ -130,6 +143,21 @@ class BlueprintValidatorAgent:
                 errors.append(
                     f"Normal_User_Profile.merchant_category_weights values must be numeric. "
                     f"Non-numeric keys: {non_numeric}"
+                )
+
+        # currency_weights (v3 fix)
+        cw = prof.get("currency_weights", {})
+        if not isinstance(cw, dict) or len(cw) == 0:
+            errors.append(
+                'Normal_User_Profile.currency_weights must be a non-empty dict '
+                'e.g. {"USD": 0.85, "EUR": 0.10, "GBP": 0.05}'
+            )
+        elif isinstance(cw, dict):
+            non_numeric_cw = [k for k, v in cw.items() if not isinstance(v, (int, float))]
+            if non_numeric_cw:
+                errors.append(
+                    f"Normal_User_Profile.currency_weights values must be numeric. "
+                    f"Non-numeric keys: {non_numeric_cw}"
                 )
 
         return errors
@@ -164,7 +192,7 @@ class BlueprintValidatorAgent:
             if not isinstance(params, dict):
                 errors.append(f"Fraud_Patterns[{i}].params must be an object")
             else:
-                # All params values must be numeric, boolean, or list of ints
+                # All params values must be numeric, boolean, or list of numbers
                 bad_params = []
                 for pk, pv in params.items():
                     if isinstance(pv, list):
@@ -178,6 +206,50 @@ class BlueprintValidatorAgent:
                         f"{bad_params}. All params must be numbers, booleans, "
                         f"or arrays of numbers."
                     )
+
+                # ── Amount floor and mean-range checks (v4) ───────────────
+                amn  = params.get("amount_min")
+                amx  = params.get("amount_max")
+                amean= params.get("amount_mean")
+
+                if isinstance(amn, (int, float)) and amn < 0.01:
+                    errors.append(
+                        f"Fraud_Patterns[{i}].params.amount_min must be >= 0.01 "
+                        f"(zero/negative amounts are invalid), got: {amn}"
+                    )
+                if isinstance(amx, (int, float)) and isinstance(amn, (int, float)) and amx <= amn:
+                    errors.append(
+                        f"Fraud_Patterns[{i}].params.amount_max ({amx}) must be > "
+                        f"amount_min ({amn})"
+                    )
+                if (isinstance(amean, (int, float)) and isinstance(amn, (int, float))
+                        and isinstance(amx, (int, float))):
+                    if amean < amn:
+                        errors.append(
+                            f"Fraud_Patterns[{i}].params.amount_mean ({amean}) must be "
+                            f">= amount_min ({amn})"
+                        )
+                    if amean > amx:
+                        errors.append(
+                            f"Fraud_Patterns[{i}].params.amount_mean ({amean}) must be "
+                            f"<= amount_max ({amx})"
+                        )
+
+                # ── burst_min_txns must not exceed burst_max_txns ─────────
+                # Violated burst range causes randrange() crash in DatasetEngine
+                bmn = params.get("burst_min_txns")
+                bmx = params.get("burst_max_txns")
+                if isinstance(bmn, (int, float)) and isinstance(bmx, (int, float)):
+                    if bmn < 1:
+                        errors.append(
+                            f"Fraud_Patterns[{i}].params.burst_min_txns ({bmn}) "
+                            f"must be >= 1"
+                        )
+                    if bmn > bmx:
+                        errors.append(
+                            f"Fraud_Patterns[{i}].params.burst_min_txns ({bmn}) "
+                            f"must be <= burst_max_txns ({bmx})"
+                        )
 
         return errors
 
