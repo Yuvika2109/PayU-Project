@@ -452,3 +452,53 @@ Fraudulent rows: 1650
 2026-03-31 18:21:43 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
 2026-03-31 18:21:43 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=8938 chars
 2026-03-31 18:30:57 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-04-12 18:07:10 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (69 chars)
+2026-04-12 18:07:10 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-04-12 18:07:10 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1861 chars
+2026-04-12 18:09:21 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 50000, 'fraud_ratio': 0.05, 'output_format': 'csv'}
+2026-04-12 18:09:21 | agents.scenario_interpreter  | INFO     | Matched known scenario on raw input: 'bin attack'
+2026-04-12 18:09:21 | agents.scenario_interpreter  | INFO     | Interpreted: name='Bin Attack'  rows=50000  ratio=5.00%  format=csv
+2026-04-12 18:09:21 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-04-12 18:09:21 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-04-12 18:09:21 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=18858 chars
+2026-04-12 18:24:23 | core.llm_interface           | WARNING  | LLM call failed (attempt 1/3): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=900) – retrying in 2.0s
+2026-04-12 18:28:24 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (65 chars)
+2026-04-12 18:28:24 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-04-12 18:28:24 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1857 chars
+2026-04-12 18:30:13 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 50, 'fraud_ratio': 0.05, 'output_format': 'csv'}
+2026-04-12 18:30:13 | agents.scenario_interpreter  | INFO     | Matched known scenario on raw input: 'bin attack'
+2026-04-12 18:30:13 | agents.scenario_interpreter  | INFO     | Interpreted: name='Bin Attack'  rows=50  ratio=5.00%  format=csv
+2026-04-12 18:30:13 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-04-12 18:30:13 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-04-12 18:30:13 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=18838 chars
+2026-04-12 18:45:15 | core.llm_interface           | WARNING  | LLM call failed (attempt 1/3): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=900) – retrying in 2.0s
+2026-04-12 18:52:23 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-04-12 19:08:38 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (65 chars)
+2026-04-12 19:08:38 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-04-12 19:08:38 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1857 chars
+2026-04-12 19:09:47 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 50, 'fraud_ratio': 0.05, 'output_format': 'csv'}
+2026-04-12 19:09:47 | agents.scenario_interpreter  | INFO     | Matched known scenario on raw input: 'bin attack'
+2026-04-12 19:09:47 | agents.scenario_interpreter  | INFO     | Interpreted: name='Bin Attack'  rows=50  ratio=5.00%  format=csv
+2026-04-12 19:09:47 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-04-12 19:09:47 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-04-12 19:09:47 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=18838 chars
+2026-04-12 19:24:49 | core.llm_interface           | WARNING  | LLM call failed (attempt 1/3): HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=900) – retrying in 2.0s
+2026-04-12 19:36:06 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (65 chars)
+2026-04-12 19:36:06 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-04-12 19:36:06 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1857 chars
+2026-04-12 19:37:50 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 50, 'fraud_ratio': 0.05, 'output_format': 'csv'}
+2026-04-12 19:37:50 | agents.scenario_interpreter  | INFO     | Matched known scenario on raw input: 'bin attack'
+2026-04-12 19:37:50 | agents.scenario_interpreter  | INFO     | Interpreted: name='Bin Attack'  rows=50  ratio=5.00%  format=csv
+2026-04-12 19:37:50 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-04-12 19:37:50 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-04-12 19:37:50 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=4854 chars
+2026-04-12 19:49:22 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-04-12 20:16:15 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (66 chars)
+2026-04-12 20:16:15 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-04-12 20:16:15 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1858 chars
+2026-04-12 20:17:47 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'BIN Attack', 'rows': 50, 'fraud_ratio': 0.33, 'output_format': 'csv'}
+2026-04-12 20:17:47 | agents.scenario_interpreter  | INFO     | Matched known scenario on raw input: 'bin attack'
+2026-04-12 20:17:47 | agents.scenario_interpreter  | INFO     | Interpreted: name='Bin Attack'  rows=50  ratio=33.00%  format=csv
+2026-04-12 20:17:47 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
+2026-04-12 20:17:47 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-04-12 20:17:47 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=4856 chars
