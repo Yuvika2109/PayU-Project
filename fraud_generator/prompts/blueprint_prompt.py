@@ -28,6 +28,9 @@ BIN Attack           | 0.01    | 2.00    | 0.50     | 30          | 0.7        |
 Card Testing         | 0.01    | 5.00    | 1.00     | 25          | 0.6        | burst
 Account Takeover     | 200     | 5000    | 800      | 8           | 0.8        | chain
 Money Laundering     | 100     | 9999    | 2000     | 3           | 0.5        | network
+UPI Fraud            | 20      | 2000    | 350      | 18          | 0.4        | burst
+UPI Collect Scam     | 50      | 1500    | 300      | 20          | 0.3        | chain
+UPI Mule Transfers   | 200     | 5000    | 900      | 10          | 0.5        | network
 Phishing             | 50      | 2000    | 400      | 5           | 0.6        | chain
 Friendly Fraud       | 50      | 500     | 150      | 2           | 0.1        | independent
 Synthetic Identity   | 500     | 5000    | 1200     | 4           | 0.3        | chain
@@ -39,6 +42,7 @@ MCC by scenario:
 BIN Attack/Card Testing → 5999,5045,7372
 Account Takeover        → 5732,5311,5094,7011,4511
 Money Laundering        → 6051,4829,6011
+UPI Fraud/Collect/Mule  → 4829,6011,6051
 Phishing                → 4829,6051,5999
 Synthetic Identity      → 5311,5732,5651
 Friendly/Refund         → 5812,5999,5651

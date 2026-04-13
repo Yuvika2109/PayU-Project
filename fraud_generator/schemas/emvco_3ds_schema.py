@@ -259,6 +259,9 @@ SCENARIO_MCC_MAP: dict[str, list[str]] = {
     "synthetic identity":  ["5311", "5732", "5651", "5661"],
     "friendly fraud":      ["5812", "5999", "5651"],
     "triangulation fraud": ["5999", "5045", "5732"],
+    "upi fraud":           ["4829", "6011", "6051"],
+    "upi collect scam":    ["4829", "6011", "6051"],
+    "upi mule transfers":  ["4829", "6011", "6051"],
 }
 
 # ── Compact column reference for prompt injection ─────────────────────────────

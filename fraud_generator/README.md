@@ -240,6 +240,9 @@ python main.py --demo money_laundering
 | Identity Fraud | Identity Theft |
 | Phishing | Social Engineering |
 | Synthetic Identity | Identity Fraud |
+| UPI Fraud | Real-Time Payment Fraud |
+| UPI Collect Scam | Authorised Push Payment Fraud |
+| UPI Mule Transfers | Money Mule Network Fraud |
 | *Any custom text* | Generic Fraud |
 
 ---

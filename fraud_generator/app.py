@@ -168,7 +168,8 @@ with tab_chat:
         '<div style="font-size:0.78rem;color:#6B8A6B;line-height:1.8;margin-bottom:14px;">'
         '• "Generate a BIN attack dataset with 50,000 transactions, 5% fraud, CSV"<br>'
         '• "Money laundering data — 10k rows, one-third fraud ratio, parquet"<br>'
-        '• "Card testing fraud, 20 thousand transactions, 8 percent fraud, JSON"</div>',
+        '• "Card testing fraud, 20 thousand transactions, 8 percent fraud, JSON"<br>'
+        '• "UPI collect scam dataset, 40k rows, 6% fraud, csv"</div>',
         unsafe_allow_html=True,
     )
     chat_input = st.text_area(

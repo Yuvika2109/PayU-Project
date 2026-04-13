@@ -112,6 +112,31 @@ KNOWN_SCENARIOS: Dict[str, Dict[str, str]] = {
             "across multiple e-commerce merchants."
         ),
     },
+    "upi fraud": {
+        "fraud_type": "Real-Time Payment Fraud",
+        "description": (
+            "Fraudster abuses UPI real-time transfers using stolen credentials, "
+            "social engineering, or mule VPAs. Mix of collect-request and push "
+            "patterns with rapid transaction velocity ($20-$2000), unusual payees, "
+            "and activity concentrated in off-hours."
+        ),
+    },
+    "upi collect scam": {
+        "fraud_type": "Authorised Push Payment Fraud",
+        "description": (
+            "Victim is tricked into approving fake UPI collect requests that appear "
+            "legitimate. Repeated requests in short windows ($50-$1500), high failure "
+            "noise before successful debits, and abrupt payee changes."
+        ),
+    },
+    "upi mule transfers": {
+        "fraud_type": "Money Mule Network Fraud",
+        "description": (
+            "Compromised or coerced UPI accounts funnel funds to mule VPAs in chained "
+            "hops. Frequent medium-value transfers ($200-$5000), many recipient accounts, "
+            "and network-like movement designed to evade traceability."
+        ),
+    },
 }
 
 # Semantic aliases: user phrases that map to a known scenario key
@@ -161,6 +186,17 @@ _SEMANTIC_ALIASES: Dict[str, str] = {
     "fake.*identit":        "synthetic identity",
     "fabricat.*pii":        "synthetic identity",
     "bust.out":             "synthetic identity",
+    # UPI fraud signals
+    "upi":                  "upi fraud",
+    "collect request":      "upi collect scam",
+    "payment request":      "upi collect scam",
+    "approve.*collect":     "upi collect scam",
+    "vpa":                  "upi fraud",
+    "mule.*upi":            "upi mule transfers",
+    "mule account":         "upi mule transfers",
+    "peer.to.peer transfer":"upi fraud",
+    "p2p transfer":         "upi fraud",
+    "qr.*upi":              "upi fraud",
 }
 
 _DEFAULT_SCENARIO = {

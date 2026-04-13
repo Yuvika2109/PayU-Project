@@ -579,3 +579,17 @@ RuntimeError: Blueprint generation failed after 3 attempts: LLM call failed afte
 2026-03-21 14:52:32 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=7989 chars
 2026-03-21 15:02:18 | agents.blueprint_generator   | WARNING  | LLM wrote fraud_ratio=5.0 — overriding with user value 0.0500
 2026-03-21 15:02:18 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-04-13 21:18:32 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (113 chars)
+2026-04-13 21:18:32 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-04-13 21:18:32 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1905 chars
+2026-04-13 21:18:32 | core.llm_interface           | WARNING  | LLM call failed (attempt 1/3): HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x108ff7a50>: Failed to establish a new connection: [Errno 1] Operation not permitted')) – retrying in 2.0s
+2026-04-13 21:18:34 | core.llm_interface           | WARNING  | LLM call failed (attempt 2/3): HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x10a051150>: Failed to establish a new connection: [Errno 1] Operation not permitted')) – retrying in 4.0s
+2026-04-13 21:18:38 | core.llm_interface           | WARNING  | LLM call failed (attempt 3/3): HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x10a0532d0>: Failed to establish a new connection: [Errno 1] Operation not permitted')) – retrying in 8.0s
+2026-04-13 21:18:46 | agents.scenario_interpreter  | WARNING  | NLP extractor failed (LLM call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/generate (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x10a0532d0>: Failed to establish a new connection: [Errno 1] Operation not permitted'))) — regex fallback.
+2026-04-13 21:18:46 | agents.scenario_interpreter  | WARNING  | Scenario name missing – defaulting to 'Custom Fraud'
+2026-04-13 21:18:46 | agents.scenario_interpreter  | INFO     | Semantic match: 'upi fraud' (score=3, all={'upi fraud': 3})
+2026-04-13 21:18:46 | agents.scenario_interpreter  | INFO     | Semantic alias match: 'upi fraud'
+2026-04-13 21:18:46 | agents.scenario_interpreter  | INFO     | Interpreted: name='Upi Fraud'  rows=5000  ratio=8.00%  format=csv
+2026-04-13 21:18:46 | agents.blueprint_generator   | WARNING  | LLM wrote total_rows=1000 — overriding with user value 5000
+2026-04-13 21:18:46 | agents.blueprint_generator   | WARNING  | LLM wrote fraud_ratio=0.05 — overriding with user value 0.0800
+2026-04-13 21:18:46 | agents.blueprint_validator   | INFO     | Blueprint VALID ✓
