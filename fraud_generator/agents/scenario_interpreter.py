@@ -395,7 +395,18 @@ class ScenarioInterpreterAgent:
         self._enricher = ScenarioEnricher()
         self._raw_input: str = ""
 
-    def interpret(self, raw_input: str) -> Dict[str, Any]:
+    def interpret(self, raw_input: str,
+                  fraud_category: str = "card") -> Dict[str, Any]:
+        """
+        Parse raw user input into normalised scenario params.
+
+        Parameters
+        ----------
+        raw_input       : Free-text / labelled / positional scenario description.
+        fraud_category  : "card" | "upi" | "other" — selected by user in the UI.
+                          Injected into params so blueprint_generator can propagate
+                          it to the blueprint and DatasetEngine can route correctly.
+        """
         logger.info("Interpreting scenario input (%d chars)", len(raw_input))
         self._raw_input = raw_input.strip()
         text = raw_input.strip()
@@ -418,7 +429,9 @@ class ScenarioInterpreterAgent:
                 params["scenario_name"] = self._scenario_from_sentence(text) or ""
 
         # Always store the raw input for blueprint context (v5)
-        params["user_context"] = self._raw_input
+        params["user_context"]    = self._raw_input
+        # Store fraud category so DatasetEngine can route to the right generator
+        params["fraud_category"]  = fraud_category.lower().strip() or "card"
 
         self._fill_defaults(params)
         self._enrich_scenario(params)

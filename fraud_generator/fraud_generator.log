@@ -502,3 +502,48 @@ Fraudulent rows: 1650
 2026-04-12 20:17:47 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Bin Attack
 2026-04-12 20:17:47 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
 2026-04-12 20:17:47 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=4856 chars
+2026-04-16 14:50:14 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (49 chars)
+2026-04-16 14:50:14 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-04-16 14:50:14 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1841 chars
+2026-04-16 14:50:18 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'UPI Collect Scam', 'rows': 40000, 'fraud_ratio': 0.06, 'output_format': 'csv'}
+2026-04-16 14:50:18 | agents.scenario_interpreter  | INFO     | Matched known scenario on raw input: 'upi collect scam'
+2026-04-16 14:50:18 | agents.scenario_interpreter  | INFO     | Interpreted: name='Upi Collect Scam'  rows=40000  ratio=6.00%  format=csv
+2026-04-16 14:50:18 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Upi Collect Scam
+2026-04-16 14:50:18 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-04-16 14:50:18 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=5170 chars
+2026-04-16 14:50:43 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-04-25 14:41:29 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (59 chars)
+2026-04-25 14:41:29 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-04-25 14:41:29 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=1851 chars
+2026-04-25 14:41:41 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'Money Laundering', 'rows': 5000, 'fraud_ratio': 0.33, 'output_format': 'csv'}
+2026-04-25 14:41:41 | agents.scenario_interpreter  | INFO     | Matched known scenario on raw input: 'money laundering'
+2026-04-25 14:41:41 | agents.scenario_interpreter  | INFO     | Interpreted: name='Money Laundering'  rows=5000  ratio=33.00%  format=csv
+2026-04-25 14:41:41 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Money Laundering
+2026-04-25 14:41:41 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-04-25 14:41:41 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=5164 chars
+2026-04-25 14:42:06 | agents.blueprint_generator   | ERROR    | Attempt 1 failed: 'list' object has no attribute 'setdefault'
+2026-04-25 14:42:06 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 2/3
+2026-04-25 14:42:06 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=5164 chars
+2026-04-25 14:42:29 | agents.blueprint_generator   | ERROR    | Attempt 2 failed: 'list' object has no attribute 'setdefault'
+2026-04-25 14:42:29 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 3/3
+2026-04-25 14:42:29 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=5164 chars
+2026-04-25 14:42:51 | agents.blueprint_generator   | ERROR    | Attempt 3 failed: 'list' object has no attribute 'setdefault'
+2026-04-26 22:18:35 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (1624 chars)
+2026-04-26 22:18:35 | agents.scenario_interpreter  | INFO     | Input mode: LABELLED
+2026-04-26 22:18:35 | agents.scenario_interpreter  | WARNING  | Scenario name missing – defaulting to 'Custom Fraud'
+2026-04-26 22:18:35 | agents.scenario_interpreter  | INFO     | Matched known scenario on raw input: 'money laundering'
+2026-04-26 22:18:35 | agents.scenario_interpreter  | INFO     | Interpreted: name='Money Laundering'  rows=1000  ratio=33.00%  format=csv
+2026-04-26 22:18:35 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Money Laundering
+2026-04-26 22:18:35 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-04-26 22:18:35 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=6727 chars
+2026-04-26 22:19:05 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1
+2026-04-26 22:34:15 | agents.scenario_interpreter  | INFO     | Interpreting scenario input (453 chars)
+2026-04-26 22:34:15 | agents.scenario_interpreter  | INFO     | Input mode: NATURAL LANGUAGE
+2026-04-26 22:34:15 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=2245 chars
+2026-04-26 22:34:18 | agents.scenario_interpreter  | INFO     | NLP extractor result: {'scenario_name': 'UPI Collect Scam', 'rows': 500, 'fraud_ratio': 0.15}
+2026-04-26 22:34:18 | agents.scenario_interpreter  | INFO     | Matched known scenario on raw input: 'upi collect scam'
+2026-04-26 22:34:18 | agents.scenario_interpreter  | INFO     | Interpreted: name='Upi Collect Scam'  rows=500  ratio=15.00%  format=csv
+2026-04-26 22:34:18 | agents.blueprint_generator   | INFO     | Generating blueprint for scenario: Upi Collect Scam
+2026-04-26 22:34:18 | agents.blueprint_generator   | INFO     | Blueprint generation attempt 1/3
+2026-04-26 22:34:18 | core.llm_interface           | INFO     | LLM call | model=llama3.2:3b | prompt_len=3997 chars
+2026-04-26 22:34:41 | agents.blueprint_generator   | INFO     | Blueprint generated successfully on attempt 1

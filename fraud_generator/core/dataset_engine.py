@@ -998,6 +998,17 @@ class DatasetEngine:
         np.random.seed(seed)
 
     def generate(self) -> pd.DataFrame:
+        # Route to the appropriate engine based on fraud_category injected by
+        # blueprint_generator._enforce_user_values() from scenario_params.
+        fraud_category = self.bp.get("fraud_category", "card").lower()
+        if fraud_category == "upi":
+            from core.upi_dataset_engine import UPIDatasetEngine
+            return UPIDatasetEngine(self.bp, self.seed).generate()
+        if fraud_category == "other":
+            from core.generic_dataset_engine import GenericDatasetEngine
+            return GenericDatasetEngine(self.bp, self.seed).generate()
+
+        # ── Card fraud (EMVCo 3DS) — original logic below ─────────────────────
         specs         = self.bp["Dataset_Specifications"]
         total_rows    = specs["total_rows"]
         fraud_ratio   = specs["fraud_ratio"]

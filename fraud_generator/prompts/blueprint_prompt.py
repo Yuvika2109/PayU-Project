@@ -166,6 +166,244 @@ Respond with ONLY the JSON object. No markdown fences, no comments, no prose.
 """
 
 
+# ── UPI Blueprint Prompt ──────────────────────────────────────────────────────
+
+_UPI_SCENARIO_HINTS = """\
+UPI FRAUD SCENARIO QUICK-REFERENCE:
+Scenario             | amt_min | amt_max | amt_mean | velocity_1h | collect_req_prob | seq_type
+---------------------|---------|---------|----------|-------------|------------------|----------
+UPI Collect Scam     | 100     | 1500    | 350      | 12          | 0.90             | burst
+UPI Mule Transfers   | 500     | 5000    | 1200     | 8           | 0.05             | network
+UPI Credential Fraud | 2000    | 49000   | 8000     | 4           | 0.30             | chain
+UPI Fraud (general)  | 50      | 2000    | 400      | 15          | 0.40             | burst
+
+Normal UPI amounts: grocery ₹100-₹800 avg=₹350, P2P ₹200-₹5000 avg=₹800, bills ₹300-₹3000.
+Amounts are in INR (Indian Rupees). date_range should be within the last 2 years.
+"""
+
+_UPI_SKELETON = """\
+{
+  "Fraud_Scenario_Name": "<string>",
+  "Fraud_Type": "<string>",
+  "Dataset_Specifications": {
+    "total_rows": <int>,
+    "fraud_ratio": <float>,
+    "output_format": "<csv|json|parquet>",
+    "date_range_start": "<YYYY-MM-DD>",
+    "date_range_end": "<YYYY-MM-DD>",
+    "num_users": <int>,
+    "num_merchants": <int>
+  },
+  "Normal_User_Profile": {
+    "transaction_amount": {
+      "distribution": "lognormal",
+      "min": <float >=10>, "max": <float>, "mean": <float>, "std": <float>
+    },
+    "transactions_per_day": {"mean": <float>, "std": <float>, "max": <int>},
+    "active_hours": {"peak_start": <0-23>, "peak_end": <0-23>, "off_peak_weight": <float>},
+    "active_days": {"weekday_weight": <float>, "weekend_weight": <float>},
+    "merchant_category_weights": {"<Category>": <float>},
+    "currency_weights": {"INR": 1.0},
+    "location_change_prob": <float>,
+    "device_change_prob": <float>
+  },
+  "Fraud_Patterns": [
+    {
+      "pattern_name": "<string>",
+      "weight": <float>,
+      "sequence_type": "<burst|chain|network|independent>",
+      "params": {
+        "amount_min": <float >=10>,
+        "amount_max": <float>,
+        "amount_mean": <float>,
+        "amount_std": <float>,
+        "burst_min_txns": <int>,
+        "burst_max_txns": <int>,
+        "burst_window_mins": <int>,
+        "preferred_hours": [<int>, <int>],
+        "velocity_txns_per_hour": <int>,
+        "is_new_vpa_prob": <float 0-1>,
+        "collect_request_prob": <float 0-1>,
+        "new_device_prob": <float 0-1>,
+        "suspicious_ip_prob": <float 0-1>
+      }
+    }
+  ],
+  "Fraud_Injection_Rules": {
+    "fraud_user_ratio": <float>,
+    "max_fraud_txns_per_user": <int>,
+    "contaminate_normal_users": false,
+    "contamination_prob": 0.0
+  },
+  "Sequence_Rules": {
+    "inter_txn_gap_seconds": {"min": <int>, "max": <int>}
+  },
+  "Anomaly_Signals": {
+    "<pattern_name>": {
+      "sender_velocity_1h": "> <int>",
+      "amount": "> <int>",
+      "is_new_vpa": "== 1"
+    }
+  }
+}"""
+
+
+def build_upi_blueprint_prompt(
+    scenario_name: str,
+    description: str,
+    fraud_type: str,
+    total_rows: int,
+    fraud_ratio: float,
+    output_format: str,
+    user_context: str = "",
+) -> str:
+    fraud_count  = int(total_rows * fraud_ratio)
+    normal_count = total_rows - fraud_count
+
+    user_block = ""
+    if user_context and user_context.strip():
+        user_block = f'\nUSER REQUEST: "{user_context.strip()}"\n'
+
+    return f"""You are a fraud-data architect. Output a JSON blueprint for a UPI synthetic dataset generator.
+
+SCENARIO: {scenario_name} | TYPE: {fraud_type}
+ROWS: {total_rows} total ({fraud_count} fraud / {normal_count} normal) | FORMAT: {output_format}{user_block}
+
+{_UPI_SCENARIO_HINTS}
+Fill this skeleton with realistic numbers for "{scenario_name}".
+Rules:
+- Fraud_Patterns MUST be a JSON array with at least 2 pattern objects.
+- All params must be numbers, booleans, or arrays of integers — no strings.
+- Amounts are in INR (₹). amount_min >= 10.
+- date_range_start/end should span 1-2 years.
+- num_users >= total_rows / 10, num_merchants >= 30.
+- Sequence_Rules: burst → min=5 max=60; chain → min=300 max=3600; network → min=3600 max=86400.
+
+{_UPI_SKELETON}
+
+Respond with ONLY the JSON object. No markdown fences, no comments, no prose.
+"""
+
+
+# ── Generic (Other) Blueprint Prompt ──────────────────────────────────────────
+
+_GENERIC_SCENARIO_HINTS = """\
+GENERIC FRAUD SCENARIO QUICK-REFERENCE:
+Scenario             | amt_min | amt_max | amt_mean | velocity_1h | foreign_ip | seq_type
+---------------------|---------|---------|----------|-------------|------------|----------
+Money Laundering     | 1000    | 9499    | 4500     | 4           | 0.40       | network
+Phishing             | 50      | 2000    | 400      | 3           | 0.65       | chain
+Synthetic Identity   | 10      | 8000    | 500      | 2           | 0.30       | chain
+Friendly Fraud       | 30      | 500     | 120      | 1           | 0.05       | independent
+Triangulation Fraud  | 50      | 1500    | 300      | 15          | 0.65       | burst
+Identity Fraud       | 200     | 4000    | 800      | 6           | 0.70       | chain
+Refund Fraud         | 30      | 400     | 100      | 1           | 0.05       | independent
+Corporate Card Abuse | 200     | 5000    | 800      | 2           | 0.40       | chain
+
+Normal user amounts: retail mean=$150, travel mean=$500.
+"""
+
+_GENERIC_SKELETON = """\
+{
+  "Fraud_Scenario_Name": "<string>",
+  "Fraud_Type": "<string>",
+  "Dataset_Specifications": {
+    "total_rows": <int>,
+    "fraud_ratio": <float>,
+    "output_format": "<csv|json|parquet>",
+    "date_range_start": "<YYYY-MM-DD>",
+    "date_range_end": "<YYYY-MM-DD>",
+    "num_users": <int>,
+    "num_merchants": <int>
+  },
+  "Normal_User_Profile": {
+    "transaction_amount": {
+      "distribution": "lognormal",
+      "min": <float >=1>, "max": <float>, "mean": <float>, "std": <float>
+    },
+    "transactions_per_day": {"mean": <float>, "std": <float>, "max": <int>},
+    "active_hours": {"peak_start": <0-23>, "peak_end": <0-23>, "off_peak_weight": <float>},
+    "active_days": {"weekday_weight": <float>, "weekend_weight": <float>},
+    "merchant_category_weights": {"<Category>": <float>},
+    "currency_weights": {"USD": <float>, "EUR": <float>},
+    "location_change_prob": <float>,
+    "device_change_prob": <float>
+  },
+  "Fraud_Patterns": [
+    {
+      "pattern_name": "<string>",
+      "weight": <float>,
+      "sequence_type": "<burst|chain|network|independent>",
+      "params": {
+        "amount_min": <float >=1>,
+        "amount_max": <float>,
+        "amount_mean": <float>,
+        "amount_std": <float>,
+        "burst_min_txns": <int>,
+        "burst_max_txns": <int>,
+        "burst_window_mins": <int>,
+        "preferred_hours": [<int>, <int>],
+        "foreign_ip_prob": <float 0-1>,
+        "same_device_prob": <float 0-1>,
+        "velocity_txns_per_hour": <int>
+      }
+    }
+  ],
+  "Fraud_Injection_Rules": {
+    "fraud_user_ratio": <float>,
+    "max_fraud_txns_per_user": <int>,
+    "contaminate_normal_users": <bool>,
+    "contamination_prob": <float>
+  },
+  "Sequence_Rules": {
+    "inter_txn_gap_seconds": {"min": <int>, "max": <int>}
+  },
+  "Anomaly_Signals": {
+    "<pattern_name>": {
+      "velocity_1h": "> <int>",
+      "amount": "> <int>",
+      "is_foreign_ip": "== 1"
+    }
+  }
+}"""
+
+
+def build_generic_blueprint_prompt(
+    scenario_name: str,
+    description: str,
+    fraud_type: str,
+    total_rows: int,
+    fraud_ratio: float,
+    output_format: str,
+    user_context: str = "",
+) -> str:
+    fraud_count  = int(total_rows * fraud_ratio)
+    normal_count = total_rows - fraud_count
+
+    user_block = ""
+    if user_context and user_context.strip():
+        user_block = f'\nUSER REQUEST: "{user_context.strip()}"\n'
+
+    return f"""You are a fraud-data architect. Output a JSON blueprint for a generic fraud synthetic dataset.
+
+SCENARIO: {scenario_name} | TYPE: {fraud_type}
+ROWS: {total_rows} total ({fraud_count} fraud / {normal_count} normal) | FORMAT: {output_format}{user_block}
+
+{_GENERIC_SCENARIO_HINTS}
+Fill this skeleton with realistic numbers for "{scenario_name}".
+Rules:
+- Fraud_Patterns MUST be a JSON array with at least 2 pattern objects.
+- All params must be numbers, booleans, or arrays of integers — no strings.
+- amount_min >= 1.0, amount_mean must be between amount_min and amount_max.
+- date_range_start/end should span 1-2 years ending near today.
+- num_users >= total_rows / 10, num_merchants >= 50.
+
+{_GENERIC_SKELETON}
+
+Respond with ONLY the JSON object. No markdown fences, no comments, no prose.
+"""
+
+
 # ── Fix prompt (also trimmed) ─────────────────────────────────────────────────
 
 BLUEPRINT_FIX_PROMPT_TEMPLATE = """\

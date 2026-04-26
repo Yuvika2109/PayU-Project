@@ -17,7 +17,12 @@ from typing import Any, Dict, Optional
 
 from config.model_config import MAX_BLUEPRINT_RETRIES, PRIMARY_MODEL
 from core.llm_interface import generate_response
-from prompts.blueprint_prompt import BLUEPRINT_FIX_PROMPT_TEMPLATE, build_blueprint_prompt
+from prompts.blueprint_prompt import (
+    BLUEPRINT_FIX_PROMPT_TEMPLATE,
+    build_blueprint_prompt,
+    build_upi_blueprint_prompt,
+    build_generic_blueprint_prompt,
+)
 from utils.json_parser import extract_json
 from utils.logger import get_logger
 
@@ -64,6 +69,10 @@ def _enforce_user_values(
     specs["total_rows"]    = user_rows
     specs["fraud_ratio"]   = user_ratio
     specs["output_format"] = user_fmt
+
+    # Propagate fraud_category so DatasetEngine can route to the right generator
+    if "fraud_category" in scenario_params:
+        blueprint["fraud_category"] = scenario_params["fraud_category"]
 
     # Scale num_users / num_merchants proportionally to the actual row count.
     # If the LLM calibrated pools for 10k rows but user wants 50k, scale up.
@@ -113,7 +122,15 @@ class BlueprintGeneratorAgent:
             scenario_params.get("scenario_name"),
         )
 
-        prompt = build_blueprint_prompt(
+        # Select the right prompt builder based on fraud category
+        category = scenario_params.get("fraud_category", "card").lower()
+        _prompt_builders = {
+            "upi":   build_upi_blueprint_prompt,
+            "other": build_generic_blueprint_prompt,
+        }
+        prompt_builder = _prompt_builders.get(category, build_blueprint_prompt)
+
+        prompt = prompt_builder(
             scenario_name=scenario_params["scenario_name"],
             description=scenario_params.get("description", ""),
             fraud_type=scenario_params.get("fraud_type", ""),
