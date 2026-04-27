@@ -169,13 +169,18 @@ Respond with ONLY the JSON object. No markdown fences, no comments, no prose.
 # ── UPI Blueprint Prompt ──────────────────────────────────────────────────────
 
 _UPI_SCENARIO_HINTS = """\
-UPI FRAUD SCENARIO QUICK-REFERENCE:
-Scenario             | amt_min | amt_max | amt_mean | velocity_1h | collect_req_prob | seq_type
----------------------|---------|---------|----------|-------------|------------------|----------
-UPI Collect Scam     | 100     | 1500    | 350      | 12          | 0.90             | burst
-UPI Mule Transfers   | 500     | 5000    | 1200     | 8           | 0.05             | network
-UPI Credential Fraud | 2000    | 49000   | 8000     | 4           | 0.30             | chain
-UPI Fraud (general)  | 50      | 2000    | 400      | 15          | 0.40             | burst
+UPI FRAUD SCENARIO QUICK-REFERENCE (use USER REQUEST amounts if provided — they override these defaults):
+Scenario             | amt_min | amt_max | amt_mean | velocity_1h | collect_req_prob | burst_min | burst_max | burst_window_mins | seq_type
+---------------------|---------|---------|----------|-------------|------------------|-----------|-----------|-------------------|----------
+UPI Collect Scam     | 200     | 1200    | 500      | 8           | 0.90             | 3         | 8         | 20                | burst
+UPI Mule Transfers   | 500     | 5000    | 1200     | 8           | 0.05             | 3         | 6         | 60                | network
+UPI Credential Fraud | 2000    | 49000   | 8000     | 4           | 0.30             | 1         | 4         | 10                | chain
+UPI Fraud (general)  | 200     | 2000    | 600      | 10          | 0.40             | 3         | 8         | 30                | burst
+
+IMPORTANT: If the USER REQUEST specifies amounts (e.g. "₹200 to ₹1200"), timing (e.g. "7pm to 11pm"),
+or request counts (e.g. "3-8 requests"), use THOSE values in amount_min/max, preferred_hours, burst_min/max_txns.
+preferred_hours for "7pm to 11pm" = [19, 20, 21, 22, 23].
+preferred_hours for "night / late night" = [22, 23, 0, 1, 2, 3].
 
 Normal UPI amounts: grocery ₹100-₹800 avg=₹350, P2P ₹200-₹5000 avg=₹800, bills ₹300-₹3000.
 Amounts are in INR (Indian Rupees). date_range should be within the last 2 years.
@@ -275,6 +280,9 @@ Rules:
 - Fraud_Patterns MUST be a JSON array with at least 2 pattern objects.
 - All params must be numbers, booleans, or arrays of integers — no strings.
 - Amounts are in INR (₹). amount_min >= 10.
+- preferred_hours MUST be a JSON array of ALL individual hour integers (0-23), NOT just [start, end].
+  Example: "7pm-11pm" → [19, 20, 21, 22, 23]. "midnight-4am" → [0, 1, 2, 3, 4].
+- If USER REQUEST specifies amounts or hours, set amount_min/max and preferred_hours from those values.
 - date_range_start/end should span 1-2 years.
 - num_users >= total_rows / 10, num_merchants >= 30.
 - Sequence_Rules: burst → min=5 max=60; chain → min=300 max=3600; network → min=3600 max=86400.

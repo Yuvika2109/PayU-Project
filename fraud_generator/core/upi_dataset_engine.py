@@ -444,6 +444,13 @@ class UPIFraudInjector:
         # Per-scenario default pattern weights
         self._pattern_weights = self._derive_pattern_weights()
 
+        # Extract per-pattern params from blueprint Fraud_Patterns so the
+        # injector respects the LLM-filled values (amount, timing, velocity).
+        self._bp_patterns: Dict[str, Dict] = {}
+        for pat in blueprint.get("Fraud_Patterns", []):
+            pname = pat.get("pattern_name", "").lower()
+            self._bp_patterns[pname] = pat.get("params", {})
+
     def _derive_pattern_weights(self) -> Dict[str, float]:
         s = self.scenario
         if "collect" in s:
@@ -454,6 +461,13 @@ class UPIFraudInjector:
             return {"collect_scam": 0.10, "mule_chain": 0.20, "credential_fraud": 0.70}
         # Default UPI fraud: mix of all three
         return {"collect_scam": 0.45, "mule_chain": 0.30, "credential_fraud": 0.25}
+
+    def _get_pattern_params(self, keyword: str) -> Dict:
+        """Return blueprint params for the first pattern whose name contains keyword."""
+        for name, params in self._bp_patterns.items():
+            if keyword in name:
+                return params
+        return {}
 
     def generate(self, target_n: int) -> pd.DataFrame:
         rows       = []
@@ -479,40 +493,72 @@ class UPIFraudInjector:
         return pd.DataFrame(rows[:target_n])
 
     # ── Pattern 1: UPI Collect Scam ──────────────────────────────────────────
-    # Fraudster sends rapid collect requests to victim.
-    # Victim is tricked (fake "receive money" UI). Pattern:
-    #   - 3-10 collect requests in a 15-30 minute window
-    #   - 0-3 USER_DECLINED failures before the successful debit
-    #   - Receiver VPA is newly registered (is_new_vpa=1)
-    #   - Amounts ₹100-₹1500 (small enough to not trigger limit alerts)
-    #   - Off-hours (7pm-11pm when users are less vigilant)
+    # Fraudster sends rapid collect requests to victim posing as bank/refund.
+    # Pattern: 3-8 requests in 15-30 min window, 7pm-11pm, ₹200-₹1200.
+    # 0-3 failures (USER_DECLINED) before victim approves. New receiver VPA.
+    # ALL rows labeled fraud=1 (failed attempts are still part of the attack).
 
     def _collect_scam(self, victim: UPIUser) -> List[Dict]:
-        rows        = []
-        n_requests  = random.randint(3, 10)
-        anchor      = self._sample_ts(preferred_hours=list(range(19, 24)))
+        rows = []
+
+        # Read blueprint-derived params (fall back to user-scenario defaults)
+        bp = self._get_pattern_params("collect")
+
+        n_requests = random.randint(
+            max(3, int(bp.get("burst_min_txns", 3))),
+            max(3, min(8, int(bp.get("burst_max_txns", 8)))),
+        )
+        window_secs = int(bp.get("burst_window_mins", 20)) * 60  # 15-30 min spread
+
+        # Amount: ₹200-₹1200 per user scenario spec
+        amt_min = max(200.0, float(bp.get("amount_min", 200)))
+        amt_max = min(1200.0, float(bp.get("amount_max", 1200)))
+        if amt_min >= amt_max:
+            amt_min, amt_max = 200.0, 1200.0
+
+        # Preferred hours: 7pm-11pm (19-23)
+        pref_hours = bp.get("preferred_hours", list(range(19, 24)))
+        if isinstance(pref_hours, list) and len(pref_hours) == 2:
+            pref_hours = list(range(int(pref_hours[0]), int(pref_hours[1]) + 1))
+        if not isinstance(pref_hours, list) or not pref_hours:
+            pref_hours = list(range(19, 24))
+
+        anchor      = self._sample_ts(preferred_hours=pref_hours)
         fraud_name  = _indian_name()
-        fraud_handle= random.choice(["paytm", "ybl", "okicici", "apl"])
+        fraud_handle = random.choice(["paytm", "ybl", "okicici", "apl"])
         fraud_vpa   = _make_vpa(fraud_name, fraud_handle)
         fraud_bank  = UPI_HANDLE_TO_BANK.get(fraud_handle, random.choice(INDIAN_BANKS))
         fraud_city  = random.choice(["Unknown", "Bengaluru", "Mumbai", "Delhi"])
         fraud_state = random.choice(INDIAN_STATES)
-        amount      = round(random.uniform(100, 1500), 2)
 
+        # All requests in a batch use the same amount (realistic: scammer asks same amount)
+        amount = round(random.uniform(amt_min, amt_max), 2)
+
+        # Some initial requests may be declined/timeout before victim accepts
         n_fail = random.randint(0, min(3, n_requests - 1))
 
+        remark_pool = [
+            "Refund from last order", "Cashback credited", "Lucky draw prize",
+            "Payment reversal", "Gift from family", "Survey reward",
+            "Electricity refund", "Govt subsidy", "Reimbursement",
+        ]
+
         for i in range(n_requests):
-            ts = anchor + timedelta(seconds=random.uniform(i * 60, i * 60 + 180))
-            is_success = (i >= n_fail)
-            status     = UPI_SUCCESS if is_success else UPI_FAILED
-            failure_cd = "" if is_success else random.choice([
-                "USER_DECLINED", "TRANSACTION_TIMEOUT", "WRONG_UPI_PIN",
-            ])
-            remark_pool = [
-                "Refund from last order", "Cashback credited", "Lucky draw prize",
-                "Payment reversal", "Gift from family", "Survey reward",
-                "Electricity refund", "Govt subsidy", "Reimbursement",
-            ]
+            # Spread requests evenly across the 15-30 min window
+            seg_start = (i / n_requests) * window_secs
+            seg_end   = ((i + 1) / n_requests) * window_secs
+            ts = anchor + timedelta(seconds=random.uniform(seg_start, seg_end))
+
+            is_failed  = (i < n_fail)
+            status     = UPI_FAILED if is_failed else UPI_SUCCESS
+            failure_cd = random.choice(
+                ["USER_DECLINED", "TRANSACTION_TIMEOUT", "WRONG_UPI_PIN"]
+            ) if is_failed else ""
+
+            # Progressive signals — velocity grows as more requests arrive
+            cur_velocity_1h   = i + 1
+            cur_collect_1h    = i + 1
+            failed_before     = min(i, n_fail)   # failures seen BEFORE current request
 
             rows.append({
                 "txn_id":               _txn_id(),
@@ -522,7 +568,7 @@ class UPIFraudInjector:
                 "day_of_week":          ts.weekday(),
                 "is_weekend":           int(ts.weekday() >= 5),
                 "is_off_hours":         int(ts.hour >= 23 or ts.hour < 6),
-                "sender_vpa":           victim.vpa,      # victim is the payer
+                "sender_vpa":           victim.vpa,
                 "receiver_vpa":         fraud_vpa,
                 "sender_name":          victim.name,
                 "receiver_name":        fraud_name,
@@ -552,19 +598,20 @@ class UPIFraudInjector:
                 "receiver_city":        fraud_city,
                 "receiver_state":       fraud_state,
                 "cross_state_flag":     int(victim.state != fraud_state),
-                "sender_velocity_1h":   n_requests,         # high velocity
-                "sender_velocity_24h":  n_requests + random.randint(1, 5),
-                "failed_attempts_before": n_fail if is_success else random.randint(0, 2),
+                "sender_velocity_1h":   cur_velocity_1h,
+                "sender_velocity_24h":  cur_velocity_1h + random.randint(2, 8),
+                "failed_attempts_before": failed_before,
                 "is_new_vpa":           1,
                 "is_first_txn_to_vpa":  1,
-                "collect_requests_1h":  n_requests,         # many collect reqs
+                "collect_requests_1h":  cur_collect_1h,
                 "amount_deviation_pct": _amount_deviation(amount, victim.avg_txn_amount),
                 "is_high_value":        int(amount > 10000),
                 "is_round_amount":      int(amount % 100 == 0),
                 "days_since_upi_reg":   victim.days_on_upi,
                 "receiver_fraud_score": round(random.uniform(0.70, 0.98), 3),
-                "fraud_label":          1 if is_success else 0,  # only successful = fraud
-                "fraud_type":           "UPI Collect Scam" if is_success else "",
+                # All collect scam rows are fraud — failed attempts are still part of the attack
+                "fraud_label":          1,
+                "fraud_type":           "UPI Collect Scam",
             })
 
         return rows
@@ -575,10 +622,23 @@ class UPIFraudInjector:
     # Different banks per hop. is_first_txn_to_vpa=1 for every hop.
 
     def _mule_chain(self, origin: UPIUser) -> List[Dict]:
-        rows      = []
-        n_hops    = random.randint(3, 6)
-        amount    = round(random.uniform(500, 5000), 2)
-        anchor    = self._sample_ts(preferred_hours=list(range(22, 24)) + list(range(0, 5)))
+        rows   = []
+        bp     = self._get_pattern_params("mule")
+        n_hops = random.randint(
+            max(3, int(bp.get("burst_min_txns", 3))),
+            max(3, min(6, int(bp.get("burst_max_txns", 6)))),
+        )
+        amt_min = float(bp.get("amount_min", 500))
+        amt_max = float(bp.get("amount_max", 5000))
+        amount  = round(random.uniform(amt_min, max(amt_min + 1, amt_max)), 2)
+
+        pref_hours = bp.get("preferred_hours", list(range(22, 24)) + list(range(0, 5)))
+        if isinstance(pref_hours, list) and len(pref_hours) == 2:
+            pref_hours = list(range(int(pref_hours[0]), int(pref_hours[1]) + 1))
+        if not isinstance(pref_hours, list) or not pref_hours:
+            pref_hours = list(range(22, 24)) + list(range(0, 5))
+
+        anchor = self._sample_ts(preferred_hours=pref_hours)
 
         # Build a chain of mule VPAs (different handles per hop for realism)
         mule_handles  = random.sample(list(UPI_HANDLE_WEIGHTS.keys()), min(n_hops, len(UPI_HANDLE_WEIGHTS)))
@@ -674,15 +734,28 @@ class UPIFraudInjector:
     # Signs: new device, suspicious IP, high-value transfers, 2-5am.
 
     def _credential_fraud(self, user: UPIUser) -> List[Dict]:
-        rows       = []
-        n_txns     = random.randint(1, 4)
-        anchor     = self._sample_ts(preferred_hours=list(range(2, 6)))
-        new_device = str(uuid.uuid4())[:12]   # device attacker is using
+        rows        = []
+        bp          = self._get_pattern_params("credential")
+        n_txns      = random.randint(
+            max(1, int(bp.get("burst_min_txns", 1))),
+            max(1, min(4, int(bp.get("burst_max_txns", 4)))),
+        )
+        pref_hours  = bp.get("preferred_hours", list(range(2, 6)))
+        if isinstance(pref_hours, list) and len(pref_hours) == 2:
+            pref_hours = list(range(int(pref_hours[0]), int(pref_hours[1]) + 1))
+        if not isinstance(pref_hours, list) or not pref_hours:
+            pref_hours = list(range(2, 6))
+
+        anchor      = self._sample_ts(preferred_hours=pref_hours)
+        new_device  = str(uuid.uuid4())[:12]
         attacker_ip = _suspicious_ip()
 
+        amt_min = float(bp.get("amount_min", 2000))
+        amt_max = float(bp.get("amount_max", 49000))
+
         for i in range(n_txns):
-            ts      = anchor + timedelta(minutes=random.uniform(i * 5, i * 15 + 10))
-            amount  = round(random.uniform(2000, 49000), 2)  # high-value
+            ts     = anchor + timedelta(minutes=random.uniform(i * 5, i * 15 + 10))
+            amount = round(random.uniform(amt_min, max(amt_min + 1, amt_max)), 2)
 
             # Mule receiver
             recv_handle  = random.choice(["paytm", "ybl", "okicici"])
