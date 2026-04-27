@@ -393,9 +393,10 @@ This is useful for:
 
 | Branch | Purpose |
 |---|---|
-| `main` | Core dataset generator — stable, production-ready. Card (EMVCo 3DS), UPI, and Generic fraud engines. |
-| `HigherAudienceChanges2` | **Full evaluation suite** — includes the complete Rule Engine UI for uploading a generated dataset, describing a fraud pattern, selecting detection rules, and viewing precision / recall / F1 metrics. Start here if you want to test how well your dataset exposes rule gaps. |
-| `HigherAudienceChanges` | Intermediate version — Streamlit UI improvements and scenario interpreter updates. |
+| `main` | **Complete project — everything merged here.** Full dataset generator with Card (EMVCo 3DS), UPI, and Generic fraud engines + Streamlit UI. Start here. |
+| `Rule_Engine` | **Rule Engine evaluation suite.** Upload a generated dataset, describe a fraud pattern, select detection rules, and view Precision / Recall / F1 metrics against ground-truth labels. |
+| `HigherAudienceChanges2` | Pre-merge snapshot — UPI + Generic engines added. Superseded by `main`. |
+| `HigherAudienceChanges` | Pre-merge snapshot — Streamlit UI improvements. Superseded by `main`. |
 | `Agentic4` | Agentic v4 — LLM code generation mode (experimental). |
 | `Agentic3` | Agentic v3 — first version with Streamlit UI. |
 | `emvco-v1` | EMVCo 3DS card fraud engine — standalone, early version. |
