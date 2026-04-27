@@ -4,6 +4,8 @@
 
 Presenation Link: https://docs.google.com/presentation/d/17bEoLXE2zWLTRfLDzdQOK7hoH6z0kGXL/edit?usp=sharing&ouid=116519170303998437026&rtpof=true&sd=true
 
+The Demo video: https://drive.google.com/file/d/1eWgbSDuLR7EhNx7kVZTBoiDWkTNlhElC/view?usp=sharing     
+
 FraudSynth is an LLM-powered pipeline that converts a plain-English fraud scenario description into a fully labelled synthetic transaction dataset — ready for rule engine testing, ML model training, and fraud research. No real customer data is ever used.
 
 ---
