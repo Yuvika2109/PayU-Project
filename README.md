@@ -403,14 +403,14 @@ This is useful for:
 
 ---
 
-### Using the Rule Engine (branch: `HigherAudienceChanges2`)
+### Using the Rule Engine (branch: `Rule_Engine`)
 
 The Rule Engine branch adds a 4-step evaluation wizard on top of the dataset generator. Use it to measure how well a set of fraud detection rules fires on a generated dataset.
 
 #### Checkout the branch
 
 ```bash
-git checkout HigherAudienceChanges2
+git checkout Rule_Engine
 ```
 
 #### Install dependencies (same as main)
